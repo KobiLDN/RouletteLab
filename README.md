@@ -2,7 +2,7 @@
 
 A single-file roulette strategy analysis and backtesting tool. Load your spin history, place chips on the visual table, and instantly see how your bet performs. A built-in algorithm can suggest and auto-place the optimal bet based on sector analysis or statistical edge.
 
-**[Live Demo →](https://kobil dn.github.io/RouletteLab)**
+**[Live Demo →](https://KobiLDN.github.io/RouletteLab)**
 
 ---
 
