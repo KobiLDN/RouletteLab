@@ -1,0 +1,84 @@
+You are building Roulette Lab — a single-file, self-contained roulette strategy analysis tool (HTML/CSS/JS, no frameworks, no server).
+
+## Core Concept
+The user loads a history of roulette spin results, places chips on a visual roulette table, and the tool backtests their bet against the spin history to show P&L. A "Best Bet" algorithm can automatically suggest and place the optimal bet.
+
+## Tech Stack
+- Pure vanilla JavaScript (no frameworks)
+- Single monolithic HTML file (all CSS and JS inline)
+- Google Fonts: Cinzel (headings) + Share Tech Mono (data/monospace)
+- Tesseract.js v5 (CDN) for OCR input
+- localStorage for pattern persistence
+- CSS Grid for roulette table layout, Flexbox for chip tray and sidebar
+
+## Visual Design
+- Dark casino felt aesthetic: deep green (#0d3b1f), gold accents (#d4a017), red/black number cells
+- Cinzel serif for titles and labels; Share Tech Mono for all numeric data
+- Chip drop animations (cubic-bezier easing, staggered by rank)
+- Hot number glow effect (green border/shadow on frequently hit cells)
+- Responsive: chip tray wraps on mobile, score panel shifts to 3-col at <640px
+
+## Layout
+- Centered single-column layout with a right-side sticky stats sidebar
+- Header: "ROULETTE LAB" title + version tag
+- Roulette Table: CSS Grid (13 cols) — green 0 spanning full height, 3×12 red/black number grid
+- Outside Bets: Two rows below the grid (Dozens, Columns, Red/Black, Even/Odd, High/Low)
+- Chip Tray: 7 denominations ($0.10–$20) with distinct colours + total display + action buttons
+- Rounds Input Panel: tabbed (Manual entry / OCR image upload)
+- Rounds Keypad: 37 buttons (0–36) for quick manual entry
+- PnL Panel: 6-card grid (Coins/Round, Stake, Rounds, Total Staked, Total Returned, Net P/L)
+- Changelog: scrollable version history
+- Right Sidebar: Pattern save/load, Algo toggle, full category stats (Red/Black, Even/Odd, Low/High, Dozens, Columns, Zero)
+
+## Betting System
+- Inside bets: Straight (35:1), Split (17:1), Corner (8:1)
+- Outside bets: Dozens/Columns (2:1), Red/Black/Even/Odd/High/Low (1:1)
+- Click to place chip on nearest zone (ghost chip preview on hover); right-click to remove
+- Stack multiple chips on same zone; count badge shown on stack
+
+## Spin Input
+- Manual: paste numbers 0–36 with any delimiter (space, comma, dot, pipe, etc.)
+- OCR: upload screenshot → canvas preprocessing → Tesseract.js row detection → auto-extract numbers
+- Configurable spin limit (last N rounds)
+
+## Best Bet Algorithms (Sector mode vs Stats mode toggle)
+Three bet-type outputs: Best Coins (straight-up), Best Splits, Best Corners
+
+**Sector Mode:**
+- Analyzes 3 classic wheel sectors: Voisins du Zéro (17 numbers), Tiers du Cylindre (12), Orphelins (8)
+- If hottest sector edge >0.02% and ≥2 hits → place coins on top scorers in that sector
+- Fallback: N-neighbor arc mode — finds arc around wheel with highest hit density
+
+**Stats Mode:**
+- Scores each number 0–36 by summing category edges (red/black, even/odd, low/high, d1/d2/d3, c1/c2/c3, zero) + individual frequency bonus
+- Picks top-scoring numbers/pairs/quads for coins/splits/corners
+- Greedy deduplication: no number appears in more than one bet unit
+
+**Default Shift:** offset slider rotates all coin placements ±N positions around the physical wheel order
+
+## Pattern Management
+- 10 named save slots in localStorage
+- Each pattern stores full chip placement map (zone IDs + chip stacks) + outside bet map
+- Save / rename / load via dropdown UI
+
+## Stats Sidebar (live, updates on new round data)
+- Spin count
+- Red % / Black % with bar charts
+- Even % / Odd %
+- Low (1–18) % / High (19–36) %
+- Dozen breakdown: 1st / 2nd / 3rd
+- Column breakdown: Col1 / Col2 / Col3
+- Zero frequency
+- Score panel: 8 heat cards showing top frequency zones with rank dots, heat bars, counts
+
+## Score Panel
+- 8 cards, each showing: rank dot (colour-coded 1–8), corner numbers, heat bar, hit count
+- Chips are auto-placed with drop animation when Best Bet fires
+
+## PnL Engine
+- Replays every placed chip against each spin in history
+- PnL mode: value all coins as fixed unit (override chip denomination for uniform calc)
+- Reports: coins per round, stake per round, rounds analysed, total staked, total returned, net P/L (colour-coded green/red)
+
+## Version
+Currently v5.1. Maintain changelog at bottom of page.

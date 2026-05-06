@@ -1,0 +1,3132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roulette Lab</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    font-size: 22px;
+    --felt: #0d3b1f;
+    --felt-light: #145228;
+    --felt-dark: #081e10;
+    --gold: #d4a017;
+    --gold-light: #f0c040;
+    --gold-dim: #8a6610;
+    --red: #c0392b;
+    --red-glow: #e74c3c;
+    --black: #1a1a1a;
+    --white: #f5f0e8;
+    --zero-green: #1a5c30;
+    --chip-1: #FFD700;
+    --chip-2: #FF6B35;
+    --chip-3: #C084FC;
+    --chip-4: #38BDF8;
+    --chip-5: #34D399;
+    --chip-6: #F472B6;
+    --chip-7: #A78BFA;
+    --chip-8: #FB923C;
+    --glow-green: #00ff88;
+    --border: rgba(212,160,23,0.3);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--felt-dark);
+    background-image:
+      radial-gradient(ellipse at 50% 0%, rgba(21,82,48,0.8) 0%, transparent 70%),
+      repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,0.05) 2px,
+        rgba(0,0,0,0.05) 4px
+      );
+    color: var(--white);
+    font-family: 'Share Tech Mono', monospace;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 0 40px;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 24px;
+  }
+
+  .version-tag {
+    display: inline-block;
+    padding: 4px 10px;
+    border: 1px solid rgba(212,160,23,0.35);
+    border-radius: 999px;
+    color: rgba(245,240,232,0.7);
+    font-size: 0.62rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    background: rgba(0,0,0,0.25);
+  }
+
+  .header-meta {
+    margin-top: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  header h1 {
+    font-family: 'Cinzel', serif;
+    font-weight: 900;
+    font-size: clamp(1.05rem, 3.5vw, 1.85rem);
+    letter-spacing: 0.12em;
+    color: var(--gold-light);
+    text-shadow: 0 0 30px rgba(212,160,23,0.6), 0 2px 4px rgba(0,0,0,0.8);
+    line-height: 1.1;
+  }
+
+  header p {
+    color: rgba(245,240,232,0.6);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    margin-top: 6px;
+    text-transform: uppercase;
+  }
+
+  .input-zone {
+    width: 100%;
+    max-width: 760px;
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .input-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    color: var(--gold);
+    text-transform: uppercase;
+  }
+
+  .input-row {
+    display: flex;
+    gap: 10px;
+    align-items: stretch;
+  }
+
+  #spinInput {
+    flex: 1;
+    background: rgba(0,0,0,0.5);
+    border: 1px solid var(--gold-dim);
+    border-radius: 4px;
+    color: var(--gold-light);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 1rem;
+    padding: 10px 14px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    letter-spacing: 0.1em;
+  }
+
+  #spinInput:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 12px rgba(212,160,23,0.3);
+  }
+
+  #spinInput::placeholder { color: rgba(212,160,23,0.3); }
+
+  button {
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dim) 100%);
+    border: none;
+    border-radius: 4px;
+    color: #000;
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    letter-spacing: 0.1em;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.2s;
+    white-space: nowrap;
+  }
+
+  button:hover { box-shadow: 0 0 16px rgba(212,160,23,0.5); }
+  button:active { transform: scale(0.97); }
+
+  .history-strip {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    align-items: center;
+    min-height: 32px;
+  }
+
+  .hist-chip {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: bold;
+    border: 2px solid rgba(255,255,255,0.2);
+    transition: all 0.3s;
+  }
+
+  .hist-chip.red { background: var(--red); border-color: var(--red-glow); }
+  .hist-chip.black { background: #222; border-color: #555; }
+  .hist-chip.zero { background: var(--zero-green); border-color: #2ecc71; }
+  .hist-chip.active-window { box-shadow: 0 0 8px var(--glow-green); border-color: var(--glow-green); }
+
+  .hist-label {
+    font-size: 0.65rem;
+    color: rgba(245,240,232,0.4);
+    letter-spacing: 0.15em;
+    white-space: nowrap;
+  }
+
+  /* ─── TABLE WRAPPER ─── */
+  .table-outer {
+    width: 100%;
+    max-width: 820px;
+    position: relative;
+  }
+
+  .pattern-panel {
+    width: 100%;
+    max-width: 820px;
+    margin-bottom: 12px;
+    background: rgba(0,0,0,0.35);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .pattern-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: nowrap;
+    width: 100%;
+  }
+
+  .pattern-row button {
+    font-size: 0.425rem;
+    padding: 6px 10px;
+    letter-spacing: 0.08em;
+  }
+
+  #patternSelect {
+    flex: 1;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+    background: rgba(0,0,0,0.45);
+    border: 1px solid var(--gold-dim);
+    border-radius: 6px;
+    color: var(--white);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.78rem;
+    padding: 10px 12px;
+    outline: none;
+  }
+
+  #patternSelect:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 12px rgba(212,160,23,0.25);
+  }
+
+  .version-footer {
+    width: 100%;
+    max-width: 820px;
+    display: flex;
+    justify-content: flex-start;
+    margin-top: 18px;
+    margin-bottom: 8px;
+  }
+
+  .table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .table-frame {
+    border: 2px solid var(--gold-dim);
+    border-radius: 8px;
+    padding: 16px;
+    overflow: hidden;
+    background: var(--felt);
+    background-image:
+      radial-gradient(ellipse at 30% 50%, rgba(20,82,40,0.4) 0%, transparent 60%),
+      repeating-linear-gradient(90deg, transparent, transparent 3px, rgba(0,0,0,0.03) 3px, rgba(0,0,0,0.03) 6px);
+    box-shadow:
+      inset 0 0 60px rgba(0,0,0,0.4),
+      0 0 40px rgba(0,0,0,0.6);
+    position: relative;
+  }
+
+  /* ─── GRID ─── */
+  .roulette-grid {
+    display: grid;
+    /* zero col + 12 number cols */
+    grid-template-columns: 52px repeat(12, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 0;
+    position: relative;
+    min-width: 540px;
+  }
+
+  .cell {
+    position: relative;
+    aspect-ratio: 1 / 0.72;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    font-size: clamp(0.75rem, 1.5vw, 1rem);
+    border: 1px solid rgba(212,160,23,0.2);
+    cursor: default;
+    transition: box-shadow 0.3s;
+    user-select: none;
+  }
+
+  .cell.red { background: var(--red); }
+  .cell.black { background: var(--black); }
+  .cell.zero-cell {
+    background: var(--zero-green);
+    grid-row: 1 / 4;
+    grid-column: 1;
+    font-size: clamp(1rem, 2.5vw, 1.4rem);
+    letter-spacing: 0.05em;
+    border: 2px solid rgba(46,204,113,0.4);
+    aspect-ratio: unset;
+  }
+
+  .cell.hot {
+    box-shadow: inset 0 0 0 2.5px var(--glow-green), 0 0 12px rgba(0,255,136,0.4);
+    z-index: 1;
+  }
+  .cell.neighbour {
+    box-shadow: inset 0 0 0 2px rgba(212,160,23,0.6);
+    opacity: 0.85;
+    z-index: 1;
+  }
+
+  /* ─── CHIP OVERLAY ─── */
+  #chipLayer {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 10;
+  }
+
+  .corner-chip {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Cinzel', serif;
+    font-weight: 900;
+    font-size: 0.75rem;
+    color: #000;
+    border: 2.5px solid rgba(0,0,0,0.5);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.6), 0 0 12px rgba(255,255,255,0.15);
+    z-index: 10;
+    animation: chipDrop 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
+  }
+
+  @keyframes chipDrop {
+    from { transform: translate(-50%, calc(-50% - 20px)) scale(0.5); opacity: 0; }
+    to { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  }
+
+  .corner-chip[data-rank="1"] { background: radial-gradient(circle at 35% 35%, #fff6a0, var(--chip-1)); animation-delay: 0.05s; }
+  .corner-chip[data-rank="2"] { background: radial-gradient(circle at 35% 35%, #ffb89a, var(--chip-2)); animation-delay: 0.1s; }
+  .corner-chip[data-rank="3"] { background: radial-gradient(circle at 35% 35%, #e0b4fc, var(--chip-3)); animation-delay: 0.15s; }
+  .corner-chip[data-rank="4"] { background: radial-gradient(circle at 35% 35%, #a8e4fc, var(--chip-4)); animation-delay: 0.2s; }
+  .corner-chip[data-rank="5"] { background: radial-gradient(circle at 35% 35%, #a8f0d8, var(--chip-5)); animation-delay: 0.25s; }
+  .corner-chip[data-rank="6"] { background: radial-gradient(circle at 35% 35%, #fbb6d4, var(--chip-6)); animation-delay: 0.3s; }
+  .corner-chip[data-rank="7"] { background: radial-gradient(circle at 35% 35%, #c4b5fd, var(--chip-7)); animation-delay: 0.35s; }
+  .corner-chip[data-rank="8"] { background: radial-gradient(circle at 35% 35%, #fed7aa, var(--chip-8)); animation-delay: 0.4s; }
+
+  /* ─── SCORE PANEL ─── */
+  .score-panel {
+    margin-top: 18px;
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 8px;
+    width: 100%;
+    max-width: 820px;
+  }
+
+  .score-card {
+    background: rgba(0,0,0,0.35);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 8px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .score-card .rank-dot {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Cinzel', serif;
+    font-weight: 900;
+    font-size: 0.7rem;
+    color: #000;
+    margin-bottom: 2px;
+  }
+
+  .score-card[data-r="1"] .rank-dot { background: var(--chip-1); }
+  .score-card[data-r="2"] .rank-dot { background: var(--chip-2); }
+  .score-card[data-r="3"] .rank-dot { background: var(--chip-3); }
+  .score-card[data-r="4"] .rank-dot { background: var(--chip-4); }
+  .score-card[data-r="5"] .rank-dot { background: var(--chip-5); }
+  .score-card[data-r="6"] .rank-dot { background: var(--chip-6); }
+  .score-card[data-r="7"] .rank-dot { background: var(--chip-7); }
+  .score-card[data-r="8"] .rank-dot { background: var(--chip-8); }
+
+  .score-card .corner-nums {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--gold-light);
+    letter-spacing: 0.05em;
+    line-height: 1.5;
+  }
+
+  .score-card .heat-bar {
+    width: 100%;
+    height: 4px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 4px;
+  }
+
+  .score-card .heat-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.5s ease;
+  }
+
+  .score-card[data-r="1"] .heat-fill { background: var(--chip-1); }
+  .score-card[data-r="2"] .heat-fill { background: var(--chip-2); }
+  .score-card[data-r="3"] .heat-fill { background: var(--chip-3); }
+  .score-card[data-r="4"] .heat-fill { background: var(--chip-4); }
+  .score-card[data-r="5"] .heat-fill { background: var(--chip-5); }
+  .score-card[data-r="6"] .heat-fill { background: var(--chip-6); }
+  .score-card[data-r="7"] .heat-fill { background: var(--chip-7); }
+  .score-card[data-r="8"] .heat-fill { background: var(--chip-8); }
+
+  .score-card .heat-val {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: rgba(245,240,232,0.6);
+  }
+
+  .empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    color: rgba(245,240,232,0.3);
+    font-size: 0.75rem;
+    letter-spacing: 0.15em;
+    padding: 16px;
+    text-transform: uppercase;
+  }
+
+  /* ─── STATS SECTION ─── */
+  .stats-section {
+    width: 100%;
+    max-width: 820px;
+    margin-top: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .stats-group {
+    display: flex;
+    gap: 6px;
+  }
+  .stat-item {
+    flex: 1;
+    background: rgba(0,0,0,0.35);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 6px 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+  }
+  .stat-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    color: rgba(245,240,232,0.65);
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .stat-count {
+    font-family: 'Cinzel', serif;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--gold-light);
+    line-height: 1;
+  }
+  .stat-bar {
+    width: 100%;
+    height: 3px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .stat-fill {
+    height: 100%;
+    background: var(--gold);
+    border-radius: 2px;
+    transition: width 0.4s ease;
+  }
+  .stat-item.hot-stat { border-color: rgba(0,255,136,0.35); }
+  .stat-item.hot-stat .stat-count { color: var(--glow-green); }
+  .stat-item.hot-stat .stat-fill { background: var(--glow-green); }
+
+  @media (max-width: 520px) {
+    .score-panel { grid-template-columns: repeat(5, 1fr); gap: 4px; }
+    .score-card { padding: 6px 4px; }
+    .score-card .corner-nums { font-size: 0.6rem; }
+    .corner-chip { width: 22px; height: 22px; font-size: 0.62rem; }
+  }
+
+  /* ─── BET OVERLAY ─── */
+  #betOverlay {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 15;
+    cursor: crosshair;
+  }
+
+  /* ─── CHIPS ─── */
+  .placed-chip, .ghost-chip {
+    position: absolute;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Cinzel', serif;
+    font-weight: 900;
+    font-size: 0.55rem;
+    pointer-events: none;
+    z-index: 20;
+    border: 2px solid rgba(0,0,0,0.4);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+  }
+  .ghost-chip {
+    opacity: 0.55;
+    transition: left 0.05s, top 0.05s;
+  }
+  .placed-chip {
+    animation: chipDrop 0.25s cubic-bezier(0.34,1.56,0.64,1) both;
+  }
+  .chip-count {
+    position: absolute;
+    top: -6px; right: -6px;
+    background: var(--gold-light);
+    color: #000;
+    border-radius: 50%;
+    width: 14px; height: 14px;
+    font-size: 0.45rem;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 900;
+    border: 1px solid rgba(0,0,0,0.3);
+  }
+
+  /* ─── OUTSIDE BETS ─── */
+  .outside-bets {
+    width: 100%;
+    max-width: 820px;
+    margin-top: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .ob-row {
+    display: flex;
+    gap: 3px;
+  }
+  .ob-cell {
+    flex: 1;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 7px 4px;
+    text-align: center;
+    font-family: 'Cinzel', serif;
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: rgba(245,240,232,0.75);
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+    transition: border-color 0.15s, background 0.15s;
+    text-transform: uppercase;
+    min-height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .ob-cell:hover { border-color: var(--gold); background: rgba(212,160,23,0.1); }
+  .ob-cell.red-cell { background: rgba(192,57,43,0.25); border-color: rgba(192,57,43,0.5); color: #e74c3c; }
+  .ob-cell.red-cell:hover { background: rgba(192,57,43,0.4); }
+  .ob-cell.black-cell { background: rgba(0,0,0,0.5); border-color: rgba(255,255,255,0.15); }
+  .ob-cell.black-cell:hover { background: rgba(0,0,0,0.65); border-color: rgba(255,255,255,0.3); }
+  .ob-chip-stack {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+
+  /* ─── CHIP TRAY ─── */
+  .chip-tray {
+    width: 100%;
+    max-width: 820px;
+    margin-top: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: nowrap;
+  }
+  .tray-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    color: var(--gold-dim);
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .tray-left {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    flex: 0 0 88px;
+    min-width: 88px;
+  }
+  .tray-left .total-display {
+    font-size: 0.62rem;
+    letter-spacing: 0.12em;
+    min-width: 88px;
+  }
+  .chips-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: nowrap;
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+  .chip-btn {
+    width: 42px; height: 42px;
+    border-radius: 50%;
+    border: 2.5px solid rgba(0,0,0,0.4);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Cinzel', serif;
+    font-weight: 900;
+    font-size: 0.65rem;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    transition: transform 0.1s, box-shadow 0.1s;
+    user-select: none;
+    flex: 0 0 42px;
+  }
+  .chip-btn:hover { transform: scale(1.1); box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
+  .chip-btn.active { transform: scale(1.15); box-shadow: 0 0 0 3px var(--gold-light), 0 4px 12px rgba(0,0,0,0.5); }
+  .tray-right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: nowrap;
+    min-width: max-content;
+    padding-left: 12px;
+  }
+  .total-display {
+    font-family: 'Cinzel', serif;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--gold-light);
+    white-space: nowrap;
+  }
+  .tray-action-btn {
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dim) 100%);
+    border: none;
+    border-radius: 6px;
+    color: #000;
+    font-family: 'Cinzel', serif;
+    font-size: 0.56rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    width: 102px;
+    min-height: 44px;
+    padding: 6px 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    line-height: 1.05;
+    white-space: normal;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .tray-action-btn .btn-line,
+  .tray-right .clear-btn .btn-line {
+    display: block;
+  }
+  .tray-action-btn:hover { box-shadow: 0 0 16px rgba(212,160,23,0.5); }
+  .tray-action-btn:active { transform: scale(0.97); }
+  .clear-btn {
+    background: rgba(0,0,0,0.4);
+    border: 1px solid var(--gold-dim);
+    color: var(--gold);
+    font-family: 'Cinzel', serif;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    padding: 6px 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .clear-btn:hover { background: rgba(212,160,23,0.15); }
+  .tray-right .clear-btn {
+    width: 100px;
+    min-height: 44px;
+    padding: 6px 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    line-height: 1.05;
+    white-space: normal;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  @media (max-width: 900px) {
+    .chip-tray {
+      flex-wrap: wrap;
+    }
+
+    .tray-right {
+      width: 100%;
+      margin-left: 0;
+      justify-content: flex-start;
+      flex-wrap: wrap;
+    }
+  }
+
+  .tab-section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .numbers-panel {
+    width: 100%;
+    max-width: 820px;
+    margin-top: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    background: rgba(0,0,0,0.35);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .numbers-tabs {
+    display: flex;
+    gap: 0;
+    flex-wrap: wrap;
+    padding: 10px 10px 0;
+    background: linear-gradient(180deg, rgba(0,0,0,0.18), rgba(0,0,0,0.05));
+  }
+
+  .numbers-tab {
+    background: rgba(0,0,0,0.28);
+    border: 1px solid rgba(212,160,23,0.25);
+    border-bottom: none;
+    border-radius: 8px 8px 0 0;
+    color: rgba(245,240,232,0.72);
+    font-family: 'Cinzel', serif;
+    font-size: 0.64rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    margin-right: 6px;
+  }
+
+  .numbers-tab:hover {
+    border-color: var(--gold);
+    color: var(--gold-light);
+  }
+
+  .numbers-tab.active {
+    background: rgba(212,160,23,0.12);
+    border-color: var(--gold-light);
+    color: var(--gold-light);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+  }
+
+  .numbers-view {
+    display: none !important;
+    width: 100%;
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px;
+    border-top: 1px solid rgba(212,160,23,0.16);
+  }
+
+  .numbers-view.active {
+    display: flex !important;
+  }
+
+  .paste-title {
+    font-family: 'Cinzel', serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    color: var(--gold-light);
+    text-transform: uppercase;
+  }
+
+  .paste-hint {
+    font-size: 0.62rem;
+    color: rgba(245,240,232,0.55);
+    line-height: 1.5;
+    letter-spacing: 0.06em;
+  }
+
+  #roundsInput {
+    width: 100%;
+    background: rgba(0,0,0,0.45);
+    border: 1px solid var(--gold-dim);
+    border-radius: 6px;
+    color: var(--white);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.82rem;
+    padding: 10px 12px;
+    outline: none;
+    height: 40px;
+  }
+
+  #roundsInput:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 12px rgba(212,160,23,0.25);
+  }
+
+  #roundsInput::placeholder {
+    color: rgba(245,240,232,0.3);
+  }
+
+  .limit-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .limit-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.4);
+    border: 1px solid var(--gold-dim);
+    color: var(--gold-light);
+    font-size: 1rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+
+  .limit-btn:hover { background: rgba(212,160,23,0.15); }
+
+  .limit-val {
+    font-family: 'Cinzel', serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--gold-light);
+    width: 56px;
+    text-align: center;
+    background: rgba(0,0,0,0.45);
+    border: 1px solid var(--gold-dim);
+    border-radius: 4px;
+    outline: none;
+    padding: 4px 6px;
+    -moz-appearance: textfield;
+  }
+  .limit-val:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 8px rgba(212,160,23,0.3);
+  }
+  .limit-val::-webkit-inner-spin-button,
+  .limit-val::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+  .limit-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    color: rgba(245,240,232,0.55);
+    text-transform: uppercase;
+  }
+
+  .paste-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .rounds-keypad {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .keypad-row {
+    display: flex;
+    gap: 4px;
+  }
+
+  .round-btn {
+    flex: 1;
+    min-height: 22px;
+    padding: 2px 0;
+    border-radius: 3px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+  }
+
+  .paste-status {
+    font-size: 0.68rem;
+    color: rgba(245,240,232,0.65);
+    letter-spacing: 0.08em;
+  }
+
+  .paste-status.error {
+    color: #ff8f8f;
+  }
+
+  .paste-status.success {
+    color: var(--glow-green);
+  }
+
+  .ocr-dropzone {
+    border: 1px dashed rgba(212,160,23,0.35);
+    border-radius: 8px;
+    min-height: 140px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: rgba(245,240,232,0.68);
+    background: rgba(0,0,0,0.2);
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+  }
+
+  .ocr-dropzone:hover,
+  .ocr-dropzone.active {
+    border-color: var(--gold);
+    background: rgba(212,160,23,0.08);
+  }
+
+  .ocr-dropzone strong {
+    color: var(--gold-light);
+  }
+
+  .ocr-preview-wrap {
+    display: none;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0,0,0,0.2);
+    border: 1px solid rgba(212,160,23,0.18);
+    border-radius: 8px;
+    padding: 12px;
+    min-height: 140px;
+  }
+
+  .ocr-preview-wrap.visible {
+    display: flex;
+  }
+
+  .ocr-preview {
+    max-width: 100%;
+    max-height: 260px;
+    border-radius: 6px;
+    display: block;
+  }
+
+  .ocr-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .ocr-status {
+    font-size: 0.68rem;
+    color: rgba(245,240,232,0.65);
+    letter-spacing: 0.08em;
+  }
+
+  .ocr-status.error {
+    color: #ff8f8f;
+  }
+
+  .ocr-status.success {
+    color: var(--glow-green);
+  }
+
+  .ocr-panel .paste-title {
+    font-size: 0.75rem;
+    letter-spacing: 0.16em;
+  }
+
+  .ocr-panel .paste-hint {
+    font-size: 0.62rem;
+    line-height: 1.5;
+    letter-spacing: 0.06em;
+  }
+
+  .ocr-dropzone {
+    font-size: 0.82rem;
+    line-height: 1.45;
+  }
+
+  .ocr-dropzone strong {
+    font-family: 'Cinzel', serif;
+    font-size: 0.8rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .pnl-panel {
+    width: 100%;
+    max-width: 820px;
+    margin-top: 14px;
+    background: rgba(0,0,0,0.35);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .pnl-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .pnl-control {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .pnl-control label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    color: rgba(245,240,232,0.7);
+    text-transform: uppercase;
+  }
+
+  .pnl-coins {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .pnl-coin-btn {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    border: 2.5px solid rgba(0,0,0,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Cinzel', serif;
+    font-weight: 900;
+    font-size: 0.62rem;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    transition: transform 0.1s, box-shadow 0.1s;
+    user-select: none;
+  }
+
+  .pnl-coin-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  }
+
+  .pnl-coin-btn.active {
+    transform: scale(1.15);
+    box-shadow: 0 0 0 3px var(--gold-light), 0 4px 12px rgba(0,0,0,0.5);
+  }
+
+  .pnl-chip-mode {
+    background: rgba(0,0,0,0.4);
+    border: 1px solid var(--gold-dim);
+    color: var(--gold-light);
+    font-family: 'Cinzel', serif;
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    padding: 8px 12px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+  }
+
+  .pnl-chip-mode:hover {
+    background: rgba(212,160,23,0.12);
+  }
+
+  .pnl-chip-mode.active {
+    border-color: var(--gold-light);
+    box-shadow: 0 0 0 2px rgba(212,160,23,0.25);
+  }
+
+  .pnl-summary {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .pnl-card {
+    background: rgba(0,0,0,0.28);
+    border: 1px solid rgba(212,160,23,0.2);
+    border-radius: 6px;
+    padding: 10px 8px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .pnl-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.58rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    color: rgba(245,240,232,0.6);
+    text-transform: uppercase;
+    flex: 1;
+  }
+
+  .pnl-value {
+    margin-top: 6px;
+    font-family: 'Cinzel', serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--gold-light);
+  }
+
+  .pnl-value.positive {
+    color: var(--glow-green);
+  }
+
+  .pnl-value.negative {
+    color: #ff8f8f;
+  }
+
+  .changelog-panel {
+    width: 100%;
+    max-width: 820px;
+    margin-top: 18px;
+    background: rgba(0,0,0,0.35);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .changelog-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 110px;
+    overflow-y: auto;
+    padding-right: 4px;
+    scroll-behavior: smooth;
+  }
+
+  .changelog-list::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .changelog-list::-webkit-scrollbar-track {
+    background: rgba(255,255,255,0.05);
+    border-radius: 999px;
+  }
+
+  .changelog-list::-webkit-scrollbar-thumb {
+    background: rgba(212,160,23,0.45);
+    border-radius: 999px;
+  }
+
+  .changelog-list::-webkit-scrollbar-thumb:hover {
+    background: rgba(212,160,23,0.7);
+  }
+
+  .changelog-item {
+    background: rgba(0,0,0,0.25);
+    border: 1px solid rgba(212,160,23,0.18);
+    border-radius: 6px;
+    padding: 10px 12px;
+  }
+
+  .changelog-version {
+    font-family: 'Cinzel', serif;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: var(--gold-light);
+    text-transform: uppercase;
+  }
+
+  .changelog-text {
+    margin-top: 6px;
+    font-size: 0.72rem;
+    line-height: 1.5;
+    color: rgba(245,240,232,0.78);
+  }
+
+  @media (max-width: 640px) {
+    .pnl-summary {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  .page-layout {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 16px;
+    width: 100%;
+    max-width: 1060px;
+    padding: 0 12px;
+  }
+
+  .main-col {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .stats-sidebar {
+    width: 190px;
+    min-width: 0;
+    flex-shrink: 0;
+    overflow: hidden;
+    background: rgba(0,0,0,0.55);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    position: sticky;
+    top: 16px;
+    backdrop-filter: blur(4px);
+  }
+
+  .stats-sidebar-title {
+    font-family: 'Cinzel', serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    color: var(--gold-light);
+    text-transform: uppercase;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 8px;
+  }
+
+  .stats-spins-count {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: rgba(245,240,232,0.6);
+    text-align: center;
+    letter-spacing: 0.08em;
+    margin-top: -4px;
+  }
+
+  .stats-group-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 5px;
+  }
+
+  .stat-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 5px;
+  }
+
+  .stat-row-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: rgba(245,240,232,0.9);
+    width: 52px;
+    flex-shrink: 0;
+  }
+
+  .stat-row-bar {
+    flex: 1;
+    height: 6px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .stat-row-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: var(--gold);
+    transition: width 0.3s ease;
+  }
+
+  .stat-row-fill.red    { background: var(--red-glow); }
+  .stat-row-fill.black  { background: #888; }
+  .stat-row-fill.green  { background: var(--glow-green); }
+  .stat-row-fill.blue   { background: var(--chip-4); }
+  .stat-row-fill.purple { background: var(--chip-3); }
+
+  .stat-row-pct {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--gold-light);
+    width: 34px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>ROULETTE LAB</h1>
+</header>
+
+<div class="page-layout">
+<div class="main-col">
+
+<div class="table-outer">
+  <div class="table-scroll">
+    <div class="table-frame" id="tableFrame">
+      <div class="roulette-grid" id="rouletteGrid"></div>
+      <div id="chipLayer"></div>
+      <div id="betOverlay"></div>
+    </div>
+  </div>
+</div>
+
+<div class="outside-bets" id="outsideBets">
+  <div class="ob-row">
+    <div class="ob-cell" data-bet="dozen1" onclick="placeBetOB(this,'1st Dozen',[1,2,3,4,5,6,7,8,9,10,11,12])">1st 12</div>
+    <div class="ob-cell" data-bet="dozen2" onclick="placeBetOB(this,'2nd Dozen',[13,14,15,16,17,18,19,20,21,22,23,24])">2nd 12</div>
+    <div class="ob-cell" data-bet="dozen3" onclick="placeBetOB(this,'3rd Dozen',[25,26,27,28,29,30,31,32,33,34,35,36])">3rd 12</div>
+    <div class="ob-cell" data-bet="col1" onclick="placeBetOB(this,'Column 1',[1,4,7,10,13,16,19,22,25,28,31,34])">Col 1</div>
+    <div class="ob-cell" data-bet="col2" onclick="placeBetOB(this,'Column 2',[2,5,8,11,14,17,20,23,26,29,32,35])">Col 2</div>
+    <div class="ob-cell" data-bet="col3" onclick="placeBetOB(this,'Column 3',[3,6,9,12,15,18,21,24,27,30,33,36])">Col 3</div>
+  </div>
+  <div class="ob-row">
+    <div class="ob-cell" data-bet="low" onclick="placeBetOB(this,'1-18',[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18])">1–18</div>
+    <div class="ob-cell" data-bet="even" onclick="placeBetOB(this,'Even',[2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36])">Even</div>
+    <div class="ob-cell red-cell" data-bet="red" onclick="placeBetOB(this,'Red',[1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36])">Red</div>
+    <div class="ob-cell black-cell" data-bet="black" onclick="placeBetOB(this,'Black',[2,4,6,8,10,11,13,15,17,20,22,24,26,28,29,31,33,35])">Black</div>
+    <div class="ob-cell" data-bet="odd" onclick="placeBetOB(this,'Odd',[1,3,5,7,9,11,13,15,17,19,21,23,25,27,29,31,33,35])">Odd</div>
+    <div class="ob-cell" data-bet="high" onclick="placeBetOB(this,'19-36',[19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36])">19–36</div>
+  </div>
+</div>
+
+<div class="chip-tray">
+  <div class="chips-row" id="chipsRow"></div>
+  <span class="tray-label" style="margin-left:10px;">Chip</span>
+  <span class="total-display" style="margin-left:6px;">Total: <span id="totalBet">0</span></span>
+</div>
+<div class="tray-right" style="width:100%;max-width:820px;margin-top:8px;margin-left:0;padding-left:0;justify-content:flex-start;">
+  <button type="button" class="tray-action-btn" onclick="createRandomPattern()"><span class="btn-line">Random</span><span class="btn-line">Coins</span></button>
+  <button type="button" class="tray-action-btn" style="width:102px;" onclick="placeBestFiveCoins()"><span class="btn-line">Best</span><span class="btn-line">Coins</span></button>
+  <button type="button" class="tray-action-btn" style="width:102px;" onclick="placeBestSplits()"><span class="btn-line">Best</span><span class="btn-line">Split</span></button>
+  <button type="button" class="tray-action-btn" style="width:102px;" onclick="placeBestCorners()"><span class="btn-line">Best</span><span class="btn-line">Corners</span></button>
+  <button id="autoUpdateBtn" onclick="toggleAutoUpdate()" class="tray-action-btn" style="color:rgba(245,240,232,0.25);border-color:rgba(212,160,23,0.2);background:rgba(0,0,0,0.2);"><span class="btn-line">Auto</span><span class="btn-line">Update Coins</span></button>
+  <input type="number" id="bestCoinsCount" value="5" min="1" max="36"
+    style="width:48px;text-align:center;background:rgba(0,0,0,0.45);border:1px solid var(--gold-dim);border-radius:4px;color:var(--gold-light);font-family:'Cinzel',serif;font-size:0.75rem;font-weight:700;padding:3px 4px;outline:none;-moz-appearance:textfield;">
+  <span style="display:flex;align-items:center;gap:5px;margin-left:6px;">
+    <span style="font-family:'Share Tech Mono',monospace;font-size:0.58rem;color:rgba(245,240,232,0.4);letter-spacing:0.08em;text-transform:uppercase;">Shift</span>
+    <input type="number" id="defaultOffsetInput" value="0" min="-36" max="36" oninput="onDefaultOffsetInput(this)"
+      style="width:56px;text-align:center;background:rgba(0,0,0,0.45);border:1px solid var(--gold-dim);border-radius:4px;color:var(--gold-light);font-family:'Cinzel',serif;font-size:0.75rem;font-weight:700;padding:3px 4px;outline:none;">
+  </span>
+  <button class="clear-btn" style="margin-left:auto;" onclick="clearAllBets()"><span class="btn-line">Clear</span><span class="btn-line">All</span></button>
+</div>
+<div id="bestCoinsStatus" style="width:100%;max-width:820px;min-height:1.4em;margin-top:6px;padding:5px 10px;border-radius:4px;font-family:'Share Tech Mono',monospace;font-size:0.65rem;color:rgba(245,240,232,0.7);background:rgba(0,0,0,0.25);border:1px solid rgba(212,160,23,0.2);display:none;"></div>
+
+<div class="numbers-panel">
+  <div class="numbers-tabs">
+    <button type="button" class="numbers-tab active" id="roundsTabBtn" onclick="setNumbersTab('rounds')">Roulette Rounds</button>
+    <button type="button" class="numbers-tab" id="ocrTabBtn" onclick="setNumbersTab('ocr')">Image OCR</button>
+  </div>
+
+  <div class="numbers-view active" id="roundsView">
+    <div class="tab-section">
+      <div class="paste-title">Roulette Rounds</div>
+      <div class="paste-hint">Paste spins like <code>1.2.20.1.2</code> or <code>1 2 3 5 4 9 10</code>. Dots, spaces, commas, and new lines all work.</div>
+    </div>
+    <input type="text" id="roundsInput" placeholder="Paste roulette numbers here...">
+    <div class="limit-row">
+      <span class="limit-label">Last</span>
+      <input type="number" class="limit-val" id="spinLimitDisplay" value="20" min="1" oninput="onSpinLimitInput(this)">
+      <span class="limit-label">rounds</span>
+    </div>
+    <div class="rounds-keypad" id="roundsKeypad"></div>
+    <div class="paste-actions">
+      <button type="button" class="clear-btn" onclick="clearRoundsInput()">Clear Rounds</button>
+      <div class="paste-status" id="roundsStatus">Waiting for pasted numbers.</div>
+    </div>
+  </div>
+
+  <div class="numbers-view" id="ocrView">
+    <div class="tab-section">
+      <div class="paste-title">Image OCR</div>
+      <div class="paste-hint">Upload a screenshot. The OCR preprocesses the image, detects rows, reads them line by line, and fills the rounds box automatically.</div>
+    </div>
+    <input type="file" id="ocrFileInput" accept="image/*" hidden>
+    <div class="ocr-dropzone" id="ocrDropzone" tabindex="0">
+      <div><strong>Click to upload</strong> a roulette screenshot.</div>
+    </div>
+    <div class="ocr-preview-wrap" id="ocrPreviewWrap">
+      <img class="ocr-preview" id="ocrPreview" alt="OCR preview">
+    </div>
+  <div class="ocr-actions">
+      <div class="ocr-status" id="ocrStatus">Waiting for an image.</div>
+    </div>
+  </div>
+</div>
+
+<div class="pnl-panel">
+  <div class="paste-title">PnL Calculator</div>
+  <div class="paste-hint">This uses your current chips on the table and outside bets as one betting layout, then applies that same layout to every loaded round.</div>
+  <div class="pnl-summary">
+    <div class="pnl-card">
+      <div class="pnl-label">Coins Per Round</div>
+      <div class="pnl-value" id="coinsPerRoundValue">0</div>
+    </div>
+    <div class="pnl-card">
+      <div class="pnl-label">Stake Per Round</div>
+      <div class="pnl-value" id="stakePerRoundValue">0.00</div>
+    </div>
+    <div class="pnl-card">
+      <div class="pnl-label">Rounds</div>
+      <div class="pnl-value" id="roundCountValue">0</div>
+    </div>
+    <div class="pnl-card">
+      <div class="pnl-label">Total Staked</div>
+      <div class="pnl-value" id="totalStakedValue">0.00</div>
+    </div>
+    <div class="pnl-card">
+      <div class="pnl-label">Total Returned</div>
+      <div class="pnl-value" id="totalReturnedValue">0.00</div>
+    </div>
+    <div class="pnl-card">
+      <div class="pnl-label">Total Profit/Loss</div>
+      <div class="pnl-value" id="netPnlValue">0.00</div>
+    </div>
+  </div>
+  <div class="pnl-actions">
+    <div class="pnl-control">
+      <label>PnL Coin Value</label>
+      <button type="button" class="pnl-chip-mode active" id="pnlPlacedModeBtn" onclick="setPnlMode('placed')">Placed</button>
+      <div class="pnl-coins" id="pnlCoinsRow"></div>
+    </div>
+    <div class="paste-status" id="pnlStatus">Load rounds and place chips to see live PnL.</div>
+  </div>
+</div>
+
+<div class="version-footer">
+  <div class="version-tag">v5.1</div>
+</div>
+
+<div class="changelog-panel" id="changelog">
+  <div class="paste-title">Changelog</div>
+  <div class="changelog-list">
+    <div class="changelog-item">
+      <div class="changelog-version">v5.1</div>
+      <div class="changelog-text">Added Best Split and Best Corners buttons. Both use the same sector/stats algo and coin count as Best Coins, placing chips on the top-scoring 2-number splits or 4-number corners within the hot sector or arc. Default Shift applies to all three Best bet types. Zones are selected greedily with no overlapping numbers — each number appears in at most one picked zone.</div>
+    </div>
+    <div class="changelog-item">
+      <div class="changelog-version">v5.0</div>
+      <div class="changelog-text">Rebuilt Best Coins algo around physical wheel sectors (Voisins, Tiers, Orphelins) with arc fallback. Added Stats algo (scores numbers by category edge) with Sector/Stats toggle in the sidebar. Added Auto Update Coins toggle for live coin placement on new rounds. Added Default Shift input to offset coin placement by a fixed amount. Moved pattern controls and algo toggle into the sidebar. Input box now always scrolls to show the latest number on the right.</div>
+    </div>
+    <div class="changelog-item">
+      <div class="changelog-version">v4.0</div>
+      <div class="changelog-text">Moved the PnL summary cards above the PnL Coin Value controls so the key results appear first.</div>
+    </div>
+    <div class="changelog-item">
+      <div class="changelog-version">v3.8</div>
+      <div class="changelog-text">Added a slim number keypad in Roulette Rounds so spins can be appended by clicking buttons as well as typing or pasting.</div>
+    </div>
+    <div class="changelog-item">
+      <div class="changelog-version">v3.7</div>
+      <div class="changelog-text">Made OCR auto-clear the loaded image after a successful import and removed the Clear Image button.</div>
+    </div>
+    <div class="changelog-item">
+      <div class="changelog-version">v3.6</div>
+      <div class="changelog-text">Reduced the pattern controls to a compact single row by removing the Saved Patterns heading and helper text.</div>
+    </div>
+    <div class="changelog-item">
+      <div class="changelog-version">v3.5</div>
+      <div class="changelog-text">Simplified saved patterns into a compact single-row control with a dropdown plus Save and Rename actions.</div>
+    </div>
+    <div class="changelog-item">
+      <div class="changelog-version">v3.4</div>
+      <div class="changelog-text">Moved the version tag above the changelog, removed the top changelog link, and added saved coin patterns above the grid with save, load, and delete actions.</div>
+    </div>
+    <div class="changelog-item">
+      <div class="changelog-version">v3.3</div>
+      <div class="changelog-text">Reversed OCR-imported numbers before filling the rounds box so screenshots with newest results at the top import in the correct play order.</div>
+    </div>
+    <div class="changelog-item">
+      <div class="changelog-version">v3.2</div>
+      <div class="changelog-text">Reduced the tray action button widths so they fit their two-line labels more tightly with less wasted space.</div>
+    </div>
+    <div class="changelog-item">
+      <div class="changelog-version">v3.1</div>
+      <div class="changelog-text">Fixed the tray action button labels so their two-line text stacks cleanly for Random 5 Coins, Best 5 Coins, and Clear All.</div>
+    </div>
+    <div class="changelog-item">
+      <div class="changelog-version">v3.0</div>
+      <div class="changelog-text">Locked the Chip and Total area to a stable width and split the tray action labels onto two lines so the chip row no longer shifts when totals change.</div>
+    </div>
+    <div class="changelog-item">
+      <div class="changelog-version">v2.9</div>
+      <div class="changelog-text">Reduced the width of the tray action buttons and let their labels wrap more easily so the chip row has more room.</div>
+    </div>
+    <div class="changelog-item">
+      <div class="changelog-version">v2.8</div>
+      <div class="changelog-text">Moved the Total display underneath the Chip label so the chip tray has a cleaner left-to-right layout.</div>
+    </div>
+    <div class="changelog-item">
+      <div class="changelog-version">v2.7</div>
+      <div class="changelog-text">Fixed the chip tray overlap by reserving clearer space for the Total display and action buttons.</div>
+    </div>
+    <div class="changelog-item">
+      <div class="changelog-version">v2.6</div>
+      <div class="changelog-text">Reduced the page title size, made the chip tray buttons uniform, allowed the long action labels to wrap onto two lines, and kept the chip buttons perfectly circular.</div>
+    </div>
+    <div class="changelog-item">
+      <div class="changelog-version">v2.5</div>
+      <div class="changelog-text">Aligned the chip tray controls so the chips, total, and action buttons sit on one cleaner row on desktop.</div>
+    </div>
+    <div class="changelog-item">
+      <div class="changelog-version">v2.4</div>
+      <div class="changelog-text">Fixed the special zero split positions so chips can be placed correctly on 0-1, 0-2, and 0-3.</div>
+    </div>
+    <div class="changelog-item">
+      <div class="changelog-version">v2.3</div>
+      <div class="changelog-text">Refined the tabbed input area so Roulette Rounds and Image OCR now share the same structure and align cleanly.</div>
+    </div>
+    <div class="changelog-item">
+      <div class="changelog-version">v2.0</div>
+      <div class="changelog-text">Improved the Image OCR styling so it matches the Roulette Rounds tab more closely.</div>
+    </div>
+    <div class="changelog-item">
+      <div class="changelog-version">v1.9</div>
+      <div class="changelog-text">Fixed tab visibility so only the active view is shown.</div>
+    </div>
+    <div class="changelog-item">
+      <div class="changelog-version">v1.8</div>
+      <div class="changelog-text">Merged Roulette Rounds and Image OCR into one cleaner tabbed panel.</div>
+    </div>
+    <div class="changelog-item">
+      <div class="changelog-version">v1.7</div>
+      <div class="changelog-text">Removed image paste support, added tabs for manual rounds and OCR input, and made uploaded images process automatically without a separate read button.</div>
+    </div>
+    <div class="changelog-item">
+      <div class="changelog-version">v1.6</div>
+      <div class="changelog-text">Aligned the version tag and changelog link in the header so they sit evenly on the same line.</div>
+    </div>
+    <div class="changelog-item">
+      <div class="changelog-version">v1.5</div>
+      <div class="changelog-text">Made the changelog scrollable so the panel stays compact and shows the newest update first.</div>
+    </div>
+    <div class="changelog-item">
+      <div class="changelog-version">v1.4</div>
+      <div class="changelog-text">Improved OCR by preprocessing the image, detecting horizontal rows, and reading the screenshot line by line before combining the cleaned roulette numbers.</div>
+    </div>
+    <div class="changelog-item">
+      <div class="changelog-version">v1.3</div>
+      <div class="changelog-text">Added image OCR with upload and paste support, image preview, and cleaned roulette number extraction directly into the rounds box.</div>
+    </div>
+    <div class="changelog-item">
+      <div class="changelog-version">v1.2</div>
+      <div class="changelog-text">Added the changelog link beside the version tag and created the on-page changelog.</div>
+    </div>
+    <div class="changelog-item">
+      <div class="changelog-version">v1.1</div>
+      <div class="changelog-text">Adjusted the PnL summary layout so all six summary boxes fit across more cleanly on desktop.</div>
+    </div>
+    <div class="changelog-item">
+      <div class="changelog-version">v1</div>
+      <div class="changelog-text">Established versioning on the page and added the initial visible version tag.</div>
+    </div>
+  </div>
+</div>
+
+</div><!-- end main-col -->
+
+<div class="stats-sidebar" id="statsSidebar">
+  <div class="stats-sidebar-title" style="margin-bottom:4px;">Pattern</div>
+  <div style="display:flex;gap:6px;margin-bottom:6px;">
+    <button type="button" onclick="saveCurrentPattern()" style="flex:1;padding:4px 0;background:rgba(0,0,0,0.45);border:1px solid var(--gold-dim);border-radius:4px;color:var(--gold-light);font-family:'Cinzel',serif;font-size:0.6rem;font-weight:700;cursor:pointer;letter-spacing:0.05em;" onmouseover="this.style.background='rgba(212,160,23,0.1)'" onmouseout="this.style.background='rgba(0,0,0,0.45)'">Save</button>
+    <button type="button" onclick="renameCurrentPattern()" style="flex:1;padding:4px 0;background:rgba(0,0,0,0.45);border:1px solid var(--gold-dim);border-radius:4px;color:var(--gold-light);font-family:'Cinzel',serif;font-size:0.6rem;font-weight:700;cursor:pointer;letter-spacing:0.05em;" onmouseover="this.style.background='rgba(212,160,23,0.1)'" onmouseout="this.style.background='rgba(0,0,0,0.45)'">Rename</button>
+  </div>
+  <select id="patternSelect" onchange="loadSelectedPattern()" style="width:100%;max-width:100%;box-sizing:border-box;margin-bottom:10px;background:rgba(0,0,0,0.45);border:1px solid var(--gold-dim);border-radius:4px;color:var(--gold-light);font-family:'Cinzel',serif;font-size:0.65rem;font-weight:700;padding:4px 6px;outline:none;cursor:pointer;overflow:hidden;text-overflow:ellipsis;"></select>
+  <div class="stats-sidebar-title" style="margin-bottom:4px;">Algo</div>
+  <div style="display:flex;gap:4px;margin-bottom:2px;">
+    <button id="algoToggleSector" onclick="setBestCoinsAlgo('sector')"
+      style="flex:1;padding:5px 0;border-radius:4px;font-family:'Cinzel',serif;font-size:0.58rem;font-weight:700;letter-spacing:0.05em;cursor:pointer;transition:all 0.15s;background:var(--gold-dim);border:1px solid var(--gold);color:#000;">
+      Sector
+    </button>
+    <button id="algoToggleStats" onclick="setBestCoinsAlgo('stats')"
+      style="flex:1;padding:5px 0;border-radius:4px;font-family:'Cinzel',serif;font-size:0.58rem;font-weight:700;letter-spacing:0.05em;cursor:pointer;transition:all 0.15s;background:rgba(0,0,0,0.45);border:1px solid var(--gold-dim);color:var(--gold-dim);">
+      Stats
+    </button>
+  </div>
+  <div class="stats-sidebar-title">Stats</div>
+  <div class="stats-spins-count" id="statsSpins">No rounds loaded</div>
+  <div>
+    <div class="stats-group-label">Red / Black</div>
+    <div class="stat-row" id="statRed">  <span class="stat-row-label">Red</span>  <div class="stat-row-bar"><div class="stat-row-fill red"  style="width:0%"></div></div><span class="stat-row-pct">0%</span></div>
+    <div class="stat-row" id="statBlack"><span class="stat-row-label">Black</span><div class="stat-row-bar"><div class="stat-row-fill black" style="width:0%"></div></div><span class="stat-row-pct">0%</span></div>
+  </div>
+  <div>
+    <div class="stats-group-label">Even / Odd</div>
+    <div class="stat-row" id="statEven"><span class="stat-row-label">Even</span><div class="stat-row-bar"><div class="stat-row-fill"        style="width:0%"></div></div><span class="stat-row-pct">0%</span></div>
+    <div class="stat-row" id="statOdd"> <span class="stat-row-label">Odd</span> <div class="stat-row-bar"><div class="stat-row-fill purple" style="width:0%"></div></div><span class="stat-row-pct">0%</span></div>
+  </div>
+  <div>
+    <div class="stats-group-label">Low / High</div>
+    <div class="stat-row" id="statLow"> <span class="stat-row-label">0–18</span> <div class="stat-row-bar"><div class="stat-row-fill blue" style="width:0%"></div></div><span class="stat-row-pct">0%</span></div>
+    <div class="stat-row" id="statHigh"><span class="stat-row-label">19–36</span><div class="stat-row-bar"><div class="stat-row-fill"      style="width:0%"></div></div><span class="stat-row-pct">0%</span></div>
+  </div>
+  <div>
+    <div class="stats-group-label">Dozens</div>
+    <div class="stat-row" id="statD1"><span class="stat-row-label">1st 12</span><div class="stat-row-bar"><div class="stat-row-fill"        style="width:0%"></div></div><span class="stat-row-pct">0%</span></div>
+    <div class="stat-row" id="statD2"><span class="stat-row-label">2nd 12</span><div class="stat-row-bar"><div class="stat-row-fill blue"   style="width:0%"></div></div><span class="stat-row-pct">0%</span></div>
+    <div class="stat-row" id="statD3"><span class="stat-row-label">3rd 12</span><div class="stat-row-bar"><div class="stat-row-fill purple" style="width:0%"></div></div><span class="stat-row-pct">0%</span></div>
+  </div>
+  <div>
+    <div class="stats-group-label">Columns</div>
+    <div class="stat-row" id="statC1"><span class="stat-row-label">Col 1</span><div class="stat-row-bar"><div class="stat-row-fill"        style="width:0%"></div></div><span class="stat-row-pct">0%</span></div>
+    <div class="stat-row" id="statC2"><span class="stat-row-label">Col 2</span><div class="stat-row-bar"><div class="stat-row-fill blue"   style="width:0%"></div></div><span class="stat-row-pct">0%</span></div>
+    <div class="stat-row" id="statC3"><span class="stat-row-label">Col 3</span><div class="stat-row-bar"><div class="stat-row-fill purple" style="width:0%"></div></div><span class="stat-row-pct">0%</span></div>
+  </div>
+  <div>
+    <div class="stats-group-label">Zero</div>
+    <div class="stat-row" id="statZero"><span class="stat-row-label">0</span><div class="stat-row-bar"><div class="stat-row-fill green" style="width:0%"></div></div><span class="stat-row-pct">0%</span></div>
+  </div>
+</div><!-- end stats-sidebar -->
+
+</div><!-- end page-layout -->
+
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script>
+// ─── BOARD DATA ───────────────────────────────────────────────────────────────
+const REDS = new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
+
+
+// board[row][col] = number (row 0..2, col 0..11)
+const board = [
+  [3,6,9,12,15,18,21,24,27,30,33,36],
+  [2,5,8,11,14,17,20,23,26,29,32,35],
+  [1,4,7,10,13,16,19,22,25,28,31,34],
+];
+
+// ─── CHIP CONFIG ──────────────────────────────────────────────────────────────
+const CHIP_DEFS = [
+  { value: 0.10, bg: '#f0ede6', text: '#222',    border: '#aaa',     label: '0.10' },
+  { value: 0.20, bg: '#c0392b', text: '#fff',    border: '#922b21',  label: '0.20' },
+  { value: 0.50, bg: '#8e44ad', text: '#fff',    border: '#5b2c6f',  label: '0.50' },
+  { value: 1,    bg: '#2980b9', text: '#fff',    border: '#1a5276',  label: '1' },
+  { value: 5,    bg: '#27ae60', text: '#fff',    border: '#1e8449',  label: '5' },
+  { value: 10,   bg: '#f39c12', text: '#222',    border: '#b9770e',  label: '10' },
+  { value: 20,   bg: '#2c3e50', text: '#f0c040', border: '#1a252f',  label: '20' },
+];
+let selectedChip = CHIP_DEFS[3];
+
+// placedBets: Map<zoneId, { zone, chips: [{value,bg,text,border}] }>
+const placedBets = new Map();
+// obBets: Map<betId, { label, nums, chips: [{...}] }>
+const obBets = new Map();
+const PATTERN_STORAGE_KEY = 'rouletteSavedPatterns';
+const PATTERN_SLOT_COUNT = 10;
+
+let betZones = [];
+let ghostEl = null;
+let ghostZone = null;
+let spinHistory = [];
+let spinLimit = 20;
+let pnlCoinMode = 'placed';
+let ocrImageDataUrl = '';
+
+const INSIDE_PAYOUTS = {
+  Straight: 35,
+  Split: 17,
+  Street: 11,
+  Corner: 8,
+};
+
+const OUTSIDE_PAYOUTS = {
+  dozen1: 2,
+  dozen2: 2,
+  dozen3: 2,
+  col1: 2,
+  col2: 2,
+  col3: 2,
+  low: 1,
+  even: 1,
+  red: 1,
+  black: 1,
+  odd: 1,
+  high: 1,
+};
+
+// ─── BUILD GRID ───────────────────────────────────────────────────────────────
+function buildGrid() {
+  const grid = document.getElementById('rouletteGrid');
+  grid.innerHTML = '';
+  const zeroCell = document.createElement('div');
+  zeroCell.className = 'cell zero-cell';
+  zeroCell.id = 'cell-0';
+  zeroCell.textContent = '0';
+  grid.appendChild(zeroCell);
+  for (let r = 0; r < 3; r++) {
+    for (let c = 0; c < 12; c++) {
+      const n = board[r][c];
+      const cell = document.createElement('div');
+      cell.className = 'cell ' + (REDS.has(n) ? 'red' : 'black');
+      cell.id = `cell-${n}`;
+      cell.style.gridRow = r + 1;
+      cell.style.gridColumn = c + 2;
+      cell.textContent = n;
+      grid.appendChild(cell);
+    }
+  }
+}
+
+// ─── BET ZONES ────────────────────────────────────────────────────────────────
+function buildBetZones() {
+  betZones = [];
+  const frame = document.getElementById('tableFrame');
+  const fr = frame.getBoundingClientRect();
+
+  function ci(num) {
+    const el = document.getElementById(`cell-${num}`);
+    if (!el) return null;
+    const r = el.getBoundingClientRect();
+    return {
+      l: r.left - fr.left, t: r.top - fr.top,
+      r: r.right - fr.left, b: r.bottom - fr.top,
+      cx: r.left - fr.left + r.width / 2,
+      cy: r.top - fr.top + r.height / 2,
+      w: r.width, h: r.height,
+    };
+  }
+
+  // Straight up (all 37 numbers)
+  for (let n = 0; n <= 36; n++) {
+    const c = ci(n);
+    if (c) betZones.push({ id: `s_${n}`, type: 'Straight', nums: [n], x: c.cx, y: c.cy });
+  }
+
+  // Horizontal splits (same row, adjacent columns)
+  for (let r = 0; r < 3; r++) {
+    for (let c = 0; c < 11; c++) {
+      const n1 = board[r][c], n2 = board[r][c + 1];
+      const a = ci(n1), b = ci(n2);
+      if (a && b) betZones.push({
+        id: `sh_${r}_${c}`, type: 'Split',
+        nums: [n1, n2].sort((a, b) => a - b),
+        x: (a.r + b.l) / 2, y: a.cy,
+      });
+    }
+  }
+
+  // Vertical splits (same column, adjacent rows)
+  for (let r = 0; r < 2; r++) {
+    for (let c = 0; c < 12; c++) {
+      const n1 = board[r][c], n2 = board[r + 1][c];
+      const a = ci(n1), b = ci(n2);
+      if (a && b) betZones.push({
+        id: `sv_${r}_${c}`, type: 'Split',
+        nums: [n1, n2].sort((a, b) => a - b),
+        x: a.cx, y: (a.b + b.t) / 2,
+      });
+    }
+  }
+
+  // Corners (2×2 blocks)
+  for (let r = 0; r < 2; r++) {
+    for (let c = 0; c < 11; c++) {
+      const nums = [board[r][c], board[r][c+1], board[r+1][c], board[r+1][c+1]].sort((a,b)=>a-b);
+      const tl = ci(board[r][c]), tr = ci(board[r][c+1]), bl = ci(board[r+1][c]);
+      if (tl && tr && bl) betZones.push({
+        id: `crn_${r}_${c}`, type: 'Corner', nums,
+        x: (tl.r + tr.l) / 2, y: (tl.b + bl.t) / 2,
+      });
+    }
+  }
+
+  // 0 splits (0 with 1, 2, 3)
+  const c0 = ci(0);
+  if (c0) {
+    [1, 2, 3].forEach(n => {
+      const cn = ci(n);
+      if (cn) betZones.push({
+        id: `s0_${n}`, type: 'Split', nums: [0, n],
+        // Keep the zero splits on the shared border with 0 so they win over nearby straight-up bets.
+        x: c0.r,
+        y: cn.cy,
+      });
+    });
+  }
+
+}
+
+// ─── GHOST CHIP ───────────────────────────────────────────────────────────────
+function getOrCreateGhost() {
+  if (!ghostEl) {
+    ghostEl = document.createElement('div');
+    ghostEl.className = 'ghost-chip';
+    document.getElementById('chipLayer').appendChild(ghostEl);
+  }
+  return ghostEl;
+}
+
+function showGhost(zone) {
+  const g = getOrCreateGhost();
+  g.style.left = zone.x + 'px';
+  g.style.top = zone.y + 'px';
+  g.style.background = selectedChip.bg;
+  g.style.color = selectedChip.text;
+  g.style.borderColor = selectedChip.border;
+  g.textContent = selectedChip.label;
+  g.style.display = 'flex';
+  ghostZone = zone;
+}
+
+function hideGhost() {
+  if (ghostEl) ghostEl.style.display = 'none';
+  ghostZone = null;
+}
+
+// ─── OVERLAY MOUSE EVENTS ─────────────────────────────────────────────────────
+function initOverlay() {
+  const overlay = document.getElementById('betOverlay');
+  overlay.addEventListener('mousemove', e => {
+    if (!betZones.length) return;
+    const fr = document.getElementById('tableFrame').getBoundingClientRect();
+    const mx = e.clientX - fr.left, my = e.clientY - fr.top;
+    let nearest = null, minD = Infinity;
+    for (const z of betZones) {
+      const d = Math.hypot(z.x - mx, z.y - my);
+      if (d < minD) { minD = d; nearest = z; }
+    }
+    if (nearest) showGhost(nearest);
+  });
+
+  overlay.addEventListener('mouseleave', hideGhost);
+
+  overlay.addEventListener('click', () => {
+    if (ghostZone) placeChipOnZone(ghostZone);
+  });
+
+  overlay.addEventListener('contextmenu', e => {
+    e.preventDefault();
+    if (ghostZone) removeLastChipFromZone(ghostZone.id);
+  });
+}
+
+// ─── PLACE / REMOVE CHIPS ─────────────────────────────────────────────────────
+function placeChipOnZone(zone) {
+  if (!placedBets.has(zone.id)) {
+    placedBets.set(zone.id, { zone, chips: [] });
+  }
+  placedBets.get(zone.id).chips.push({ ...selectedChip });
+  renderChipLayer();
+  updateTotal();
+  calculatePnL();
+}
+
+function removeLastChipFromZone(zoneId) {
+  if (!placedBets.has(zoneId)) return;
+  const entry = placedBets.get(zoneId);
+  entry.chips.pop();
+  if (entry.chips.length === 0) placedBets.delete(zoneId);
+  renderChipLayer();
+  updateTotal();
+  calculatePnL();
+}
+
+function placeBetOB(el, label, nums) {
+  const id = el.dataset.bet;
+  if (!obBets.has(id)) obBets.set(id, { label, nums, chips: [] });
+  obBets.get(id).chips.push({ ...selectedChip });
+  renderOBChips(el, obBets.get(id).chips);
+  updateTotal();
+  calculatePnL();
+}
+
+function removeLastChipFromOB(el) {
+  const id = el.dataset.bet;
+  if (!id || !obBets.has(id)) return;
+  const entry = obBets.get(id);
+  entry.chips.pop();
+  if (entry.chips.length === 0) {
+    obBets.delete(id);
+  }
+  renderOBChips(el, entry.chips);
+  updateTotal();
+  calculatePnL();
+}
+
+function renderOBChips(el, chips) {
+  let stack = el.querySelector('.ob-chip-stack');
+  if (!stack) {
+    stack = document.createElement('div');
+    stack.className = 'ob-chip-stack';
+    el.appendChild(stack);
+  }
+  if (chips.length === 0) { stack.innerHTML = ''; return; }
+  const top = chips[chips.length - 1];
+  const count = chips.length;
+  stack.innerHTML = `<div class="placed-chip" style="position:relative;transform:none;width:28px;height:28px;background:${top.bg};color:${top.text};border-color:${top.border}">
+    ${top.label}${count > 1 ? `<span class="chip-count">${count}</span>` : ''}
+  </div>`;
+}
+
+function renderChipLayer() {
+  const layer = document.getElementById('chipLayer');
+  // Remove all placed chips (keep ghost)
+  layer.querySelectorAll('.placed-chip').forEach(e => e.remove());
+
+  for (const [id, entry] of placedBets) {
+    if (!entry.chips.length) continue;
+    const top = entry.chips[entry.chips.length - 1];
+    const count = entry.chips.length;
+    const chip = document.createElement('div');
+    chip.className = 'placed-chip';
+    chip.style.left = entry.zone.x + 'px';
+    chip.style.top = entry.zone.y + 'px';
+    chip.style.background = top.bg;
+    chip.style.color = top.text;
+    chip.style.borderColor = top.border;
+    chip.innerHTML = top.label + (count > 1 ? `<span class="chip-count">${count}</span>` : '');
+    layer.appendChild(chip);
+  }
+}
+
+function updateTotal() {
+  let total = 0;
+  for (const entry of placedBets.values()) entry.chips.forEach(c => total += c.value);
+  for (const entry of obBets.values()) entry.chips.forEach(c => total += c.value);
+  document.getElementById('totalBet').textContent = total.toFixed(2);
+}
+
+function clearAllBets() {
+  placedBets.clear();
+  obBets.clear();
+  renderChipLayer();
+  // Clear OB chips
+  document.querySelectorAll('.ob-chip-stack').forEach(s => s.innerHTML = '');
+  updateTotal();
+  calculatePnL();
+}
+
+function saveCurrentPattern() {
+  const slotIndex = Number(document.getElementById('patternSelect').value);
+  if (!Number.isInteger(slotIndex)) return;
+
+  const patterns = getSavedPatterns();
+  const existing = patterns[slotIndex] || { label: `Pattern ${slotIndex + 1}` };
+  patterns[slotIndex] = {
+    label: existing.label,
+    placedBets: Array.from(placedBets.values()).map(entry => ({
+      zoneId: entry.zone.id,
+      chips: entry.chips.map(chip => chip.value),
+    })),
+    obBets: Array.from(obBets.entries()).map(([betId, entry]) => ({
+      betId,
+      chips: entry.chips.map(chip => chip.value),
+    })),
+  };
+  localStorage.setItem(PATTERN_STORAGE_KEY, JSON.stringify(patterns));
+  renderPatternControls();
+}
+
+function getSavedPatterns() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(PATTERN_STORAGE_KEY) || '[]');
+    return Array.from({ length: PATTERN_SLOT_COUNT }, (_, index) => ({
+      label: parsed[index]?.label || `Pattern ${index + 1}`,
+      placedBets: parsed[index]?.placedBets || [],
+      obBets: parsed[index]?.obBets || [],
+    }));
+  } catch {
+    return Array.from({ length: PATTERN_SLOT_COUNT }, (_, index) => ({
+      label: `Pattern ${index + 1}`,
+      placedBets: [],
+      obBets: [],
+    }));
+  }
+}
+
+function renderPatternControls() {
+  const select = document.getElementById('patternSelect');
+  const patterns = getSavedPatterns();
+  const currentValue = select.value || '0';
+  select.innerHTML = '';
+  patterns.forEach((pattern, index) => {
+    const option = document.createElement('option');
+    option.value = String(index);
+    option.textContent = pattern.label;
+    select.appendChild(option);
+  });
+  select.value = currentValue;
+}
+
+function loadSelectedPattern() {
+  const slotIndex = Number(document.getElementById('patternSelect').value);
+  const pattern = getSavedPatterns()[slotIndex];
+  if (!pattern) return;
+
+  clearAllBets();
+
+  pattern.placedBets.forEach(saved => {
+    const zone = betZones.find(item => item.id === saved.zoneId);
+    if (!zone) return;
+    if (!placedBets.has(zone.id)) {
+      placedBets.set(zone.id, { zone, chips: [] });
+    }
+    saved.chips.forEach(value => {
+      const chipDef = CHIP_DEFS.find(chip => chip.value === value);
+      if (chipDef) placedBets.get(zone.id).chips.push({ ...chipDef });
+    });
+  });
+
+  pattern.obBets.forEach(saved => {
+    const el = document.querySelector(`.ob-cell[data-bet="${saved.betId}"]`);
+    if (!el) return;
+    const nums = saved.betId.startsWith('street_')
+      ? getAllBetCandidates().find(candidate => candidate.id === saved.betId)?.nums || []
+      : getOutsideNumbersById(saved.betId);
+    obBets.set(saved.betId, {
+      label: el.textContent.trim(),
+      nums,
+      chips: saved.chips.map(value => {
+        const chipDef = CHIP_DEFS.find(chip => chip.value === value);
+        return chipDef ? { ...chipDef } : null;
+      }).filter(Boolean),
+    });
+    renderOBChips(el, obBets.get(saved.betId).chips);
+  });
+
+  renderChipLayer();
+  updateTotal();
+  calculatePnL();
+}
+
+function renameCurrentPattern() {
+  const slotIndex = Number(document.getElementById('patternSelect').value);
+  if (!Number.isInteger(slotIndex)) return;
+  const patterns = getSavedPatterns();
+  const nextLabel = window.prompt('Rename pattern', patterns[slotIndex].label);
+  if (!nextLabel) return;
+  patterns[slotIndex].label = nextLabel.trim() || patterns[slotIndex].label;
+  localStorage.setItem(PATTERN_STORAGE_KEY, JSON.stringify(patterns));
+  renderPatternControls();
+  document.getElementById('patternSelect').value = String(slotIndex);
+}
+
+function createRandomPattern() {
+  const availableZones = betZones.filter(zone => zone.type === 'Straight');
+  if (!availableZones.length) return;
+  const coinCount = Math.max(1, Math.min(36, parseInt(document.getElementById('bestCoinsCount').value, 10) || 5));
+  clearAllBets();
+  const chosen = new Set();
+  while (chosen.size < coinCount && chosen.size < availableZones.length) {
+    const zone = availableZones[Math.floor(Math.random() * availableZones.length)];
+    if (chosen.has(zone.id)) continue;
+    chosen.add(zone.id);
+    placeChipOnZone(zone);
+  }
+}
+
+// European wheel physical order (clockwise)
+const WHEEL_ORDER = [0,32,15,19,4,21,2,25,17,34,6,27,13,36,11,30,8,23,10,5,24,16,33,1,20,14,31,9,22,18,29,7,28,12,35,3,26];
+
+// Named sectors: each covers a contiguous arc of the physical wheel
+const WHEEL_SECTORS = [
+  { name: 'Voisins',  nums: [22,18,29,7,28,12,35,3,26,0,32,15,19,4,21,2,25] },
+  { name: 'Tiers',    nums: [27,13,36,11,30,8,23,10,5,24,16,33] },
+  { name: 'Orphelins',nums: [17,34,6,1,20,14,31,9] },
+];
+
+// Return the N neighbours of a number on the physical wheel (N each side)
+function wheelNeighbours(num, n) {
+  const idx = WHEEL_ORDER.indexOf(num);
+  if (idx === -1) return [];
+  const result = [];
+  for (let i = -n; i <= n; i++) {
+    const pos = (idx + i + WHEEL_ORDER.length) % WHEEL_ORDER.length;
+    result.push(WHEEL_ORDER[pos]);
+  }
+  return result;
+}
+
+let autoUpdateBestCoins = false;
+
+function toggleAutoUpdate() {
+  autoUpdateBestCoins = !autoUpdateBestCoins;
+  const btn = document.getElementById('autoUpdateBtn');
+  btn.style.background    = autoUpdateBestCoins ? '#1a7a3a' : 'rgba(0,0,0,0.2)';
+  btn.style.color         = autoUpdateBestCoins ? '#fff' : 'rgba(245,240,232,0.25)';
+  btn.style.borderColor   = autoUpdateBestCoins ? '#00ff88' : 'rgba(212,160,23,0.2)';
+  btn.style.boxShadow     = autoUpdateBestCoins ? '0 0 10px rgba(0,255,136,0.4)' : 'none';
+  if (autoUpdateBestCoins && spinHistory.length) placeBestFiveCoins();
+}
+
+let lastBestCoinsNums = [];
+let bestCoinsWheelOffset = 0;
+let defaultBestCoinsOffset = 0;
+let bestCoinsAlgo = 'sector';
+
+function setBestCoinsAlgo(mode) {
+  bestCoinsAlgo = mode;
+  const sectorBtn = document.getElementById('algoToggleSector');
+  const statsBtn  = document.getElementById('algoToggleStats');
+  if (mode === 'sector') {
+    sectorBtn.style.background = 'var(--gold-dim)'; sectorBtn.style.color = '#000'; sectorBtn.style.borderColor = 'var(--gold)';
+    statsBtn.style.background  = 'rgba(0,0,0,0.45)'; statsBtn.style.color = 'var(--gold-dim)'; statsBtn.style.borderColor = 'var(--gold-dim)';
+  } else {
+    statsBtn.style.background  = 'var(--gold-dim)'; statsBtn.style.color = '#000'; statsBtn.style.borderColor = 'var(--gold)';
+    sectorBtn.style.background = 'rgba(0,0,0,0.45)'; sectorBtn.style.color = 'var(--gold-dim)'; sectorBtn.style.borderColor = 'var(--gold-dim)';
+  }
+  if (lastBestCoinsNums.length || spinHistory.length) placeBestFiveCoins();
+}
+
+// Number category membership for stats algo
+const NUM_CATEGORIES = (() => {
+  const RED   = new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
+  const EVEN  = new Set([2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36]);
+  const LOW   = new Set(Array.from({length:18},(_,i)=>i+1));
+  const D1    = new Set(Array.from({length:12},(_,i)=>i+1));
+  const D2    = new Set(Array.from({length:12},(_,i)=>i+13));
+  const D3    = new Set(Array.from({length:12},(_,i)=>i+25));
+  const C1    = new Set([1,4,7,10,13,16,19,22,25,28,31,34]);
+  const C2    = new Set([2,5,8,11,14,17,20,23,26,29,32,35]);
+  const C3    = new Set([3,6,9,12,15,18,21,24,27,30,33,36]);
+  const map = {};
+  for (let n = 0; n <= 36; n++) {
+    if (n === 0) { map[n] = ['zero', 'low']; continue; }
+    const cats = [];
+    cats.push(RED.has(n) ? 'red' : 'black');
+    cats.push(EVEN.has(n) ? 'even' : 'odd');
+    cats.push(LOW.has(n) ? 'low' : 'high');
+    if (D1.has(n)) cats.push('d1'); else if (D2.has(n)) cats.push('d2'); else cats.push('d3');
+    if (C1.has(n)) cats.push('c1'); else if (C2.has(n)) cats.push('c2'); else cats.push('c3');
+    map[n] = cats;
+  }
+  return map;
+})();
+
+function pickByStats(coinCount) {
+  const n = spinHistory.length;
+  const count = k => spinHistory.filter(s => s === k).length;
+  const rate  = arr => arr.reduce((s,k) => s + count(k), 0) / n;
+
+  const RED_NUMS   = [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
+  const BLACK_NUMS = [2,4,6,8,10,11,13,15,17,20,22,24,26,28,29,31,33,35];
+  const EVEN_NUMS  = [2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36];
+  const ODD_NUMS   = [1,3,5,7,9,11,13,15,17,19,21,23,25,27,29,31,33,35];
+  const LOW_NUMS   = Array.from({length:19},(_,i)=>i);
+  const HIGH_NUMS  = Array.from({length:18},(_,i)=>i+19);
+  const D1_NUMS    = Array.from({length:12},(_,i)=>i+1);
+  const D2_NUMS    = Array.from({length:12},(_,i)=>i+13);
+  const D3_NUMS    = Array.from({length:12},(_,i)=>i+25);
+  const C1_NUMS    = [1,4,7,10,13,16,19,22,25,28,31,34];
+  const C2_NUMS    = [2,5,8,11,14,17,20,23,26,29,32,35];
+  const C3_NUMS    = [3,6,9,12,15,18,21,24,27,30,33,36];
+
+  const edges = {
+    red:   rate(RED_NUMS)   - 18/37,
+    black: rate(BLACK_NUMS) - 18/37,
+    even:  rate(EVEN_NUMS)  - 18/37,
+    odd:   rate(ODD_NUMS)   - 18/37,
+    low:   rate(LOW_NUMS)   - 19/37,
+    high:  rate(HIGH_NUMS)  - 18/37,
+    d1:    rate(D1_NUMS)    - 12/37,
+    d2:    rate(D2_NUMS)    - 12/37,
+    d3:    rate(D3_NUMS)    - 12/37,
+    c1:    rate(C1_NUMS)    - 12/37,
+    c2:    rate(C2_NUMS)    - 12/37,
+    c3:    rate(C3_NUMS)    - 12/37,
+    zero:  count(0)/n       -  1/37,
+  };
+
+  const scored = [];
+  for (let num = 0; num <= 36; num++) {
+    const cats  = NUM_CATEGORIES[num];
+    const score = cats.reduce((s, c) => s + (edges[c] || 0), 0);
+    // add individual frequency bonus
+    const indiv = count(num) / n - 1/37;
+    scored.push({ n: num, score: score + indiv });
+  }
+  scored.sort((a, b) => b.score - a.score);
+  return scored.slice(0, coinCount);
+}
+
+function onDefaultOffsetInput(el) {
+  const val = parseInt(el.value, 10);
+  if (!isNaN(val)) {
+    defaultBestCoinsOffset = val;
+    if (lastBestCoinsNums.length) placeBestFiveCoins();
+  }
+}
+
+function showBestCoinsStatus(msg, isError) {
+  const el = document.getElementById('bestCoinsStatus');
+  el.textContent = msg;
+  el.style.display = 'block';
+  el.style.color = isError ? '#e74c3c' : 'var(--gold-light)';
+  el.style.borderColor = isError ? 'rgba(231,76,60,0.3)' : 'rgba(212,160,23,0.3)';
+}
+
+
+function placeBestFiveCoins() {
+  const coinCount = Math.max(1, Math.min(36, parseInt(document.getElementById('bestCoinsCount').value, 10) || 5));
+  if (!spinHistory.length) {
+    showBestCoinsStatus('Load roulette rounds first.', true);
+    return;
+  }
+
+  let chosen = [];
+  let strategy = '';
+
+  if (bestCoinsAlgo === 'stats') {
+    // Stats algo: score each number by how hot its categories are
+    const picks = pickByStats(coinCount);
+    chosen = picks.map(({ n }) => ({ n, count: spinHistory.filter(s => s === n).length }));
+    const topCats = picks.slice(0, 3).map(p => p.n).join(', ');
+    strategy = `Stats algo → top numbers by category edge`;
+  } else {
+    // Sector/Arc algo
+    const sectorScores = WHEEL_SECTORS.map(sector => {
+      const hits = spinHistory.filter(n => sector.nums.includes(n)).length;
+      const rate = hits / spinHistory.length;
+      const expected = sector.nums.length / 37;
+      return { ...sector, hits, rate, edge: rate - expected };
+    }).sort((a, b) => b.edge - a.edge);
+
+    const neighbourSize = Math.max(1, Math.floor((coinCount - 1) / 2));
+    const freq = {};
+    for (const n of spinHistory) freq[n] = (freq[n] || 0) + 1;
+    const byFreq = Object.entries(freq)
+      .map(([n, count]) => ({ n: Number(n), count }))
+      .sort((a, b) => b.count - a.count);
+
+    const arcScores = WHEEL_ORDER.filter(n => n !== 0).map(n => {
+      const neighbours = wheelNeighbours(n, neighbourSize);
+      const hits = neighbours.reduce((s, nb) => s + (freq[nb] || 0), 0);
+      return { center: n, neighbours, hits };
+    }).sort((a, b) => b.hits - a.hits);
+
+    const hotSector = sectorScores[0];
+    const hotArc = arcScores[0];
+
+    if (hotSector.edge > 0.02 && hotSector.hits >= 2) {
+      const sectorNums = hotSector.nums
+        .map(n => ({ n, count: freq[n] || 0 }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, coinCount);
+      chosen = sectorNums;
+      if (chosen.length < coinCount) {
+        const chosenSet = new Set(chosen.map(x => x.n));
+        const extras = byFreq.filter(x => !chosenSet.has(x.n)).slice(0, coinCount - chosen.length);
+        chosen = [...chosen, ...extras];
+      }
+      strategy = `${hotSector.name} sector (${hotSector.hits} hits, +${(hotSector.edge * 100).toFixed(1)}% edge)`;
+    } else {
+      chosen = hotArc.neighbours.map(n => ({ n, count: freq[n] || 0 })).slice(0, coinCount);
+      strategy = `wheel arc around ${hotArc.center} (${hotArc.hits} nearby hits)`;
+    }
+  }
+
+  const straightZones = betZones.filter(z => z.type === 'Straight');
+  const zonesChosen = chosen
+    .map(({ n, count }) => ({ zone: straightZones.find(z => z.nums[0] === n), count, n }))
+    .filter(x => x.zone);
+
+  if (!zonesChosen.length) {
+    showBestCoinsStatus('Could not map numbers to zones.', true);
+    return;
+  }
+
+  clearAllBets();
+  zonesChosen.forEach(({ zone }) => placeChipOnZone(zone));
+
+  lastBestCoinsNums = zonesChosen.map(({ n }) => n);
+  bestCoinsWheelOffset = 0;
+
+  // Apply default offset
+  if (defaultBestCoinsOffset !== 0) {
+    clearAllBets();
+    const straightZones2 = betZones.filter(z => z.type === 'Straight');
+    lastBestCoinsNums.forEach(n => {
+      const shifted = ((n + defaultBestCoinsOffset) % 37 + 37) % 37;
+      const zone = straightZones2.find(z => z.nums[0] === shifted);
+      if (zone) placeChipOnZone(zone);
+    });
+  }
+
+  const nums = lastBestCoinsNums.join(', ');
+  const msg = `${strategy} → [${nums}]`;
+  showBestCoinsStatus(msg, false);
+  document.getElementById('bestCoinsStatus').dataset.baseText = msg;
+}
+
+
+// ─── BEST SPLIT ───────────────────────────────────────────────────────────────
+function placeBestSplits() {
+  const coinCount = Math.max(1, Math.min(36, parseInt(document.getElementById('bestCoinsCount').value, 10) || 5));
+  if (!spinHistory.length) { showBestCoinsStatus('Load roulette rounds first.', true); return; }
+
+  const freq = {};
+  for (const n of spinHistory) freq[n] = (freq[n] || 0) + 1;
+
+  let hotNums = new Set();
+  let strategy = '';
+
+  if (bestCoinsAlgo === 'stats') {
+    const picks = pickByStats(coinCount * 2);
+    picks.forEach(({ n }) => hotNums.add(n));
+    strategy = 'Stats algo → best splits';
+  } else {
+    const sectorScores = WHEEL_SECTORS.map(sector => {
+      const hits = spinHistory.filter(n => sector.nums.includes(n)).length;
+      const rate = hits / spinHistory.length;
+      const expected = sector.nums.length / 37;
+      return { ...sector, hits, rate, edge: rate - expected };
+    }).sort((a, b) => b.edge - a.edge);
+
+    const hotSector = sectorScores[0];
+    const neighbourSize = Math.max(1, Math.floor((coinCount * 2 - 1) / 2));
+
+    if (hotSector.edge > 0.02 && hotSector.hits >= 2) {
+      hotSector.nums.forEach(n => hotNums.add(n));
+      strategy = `${hotSector.name} sector → best splits`;
+    } else {
+      const arcScores = WHEEL_ORDER.filter(n => n !== 0).map(n => {
+        const neighbours = wheelNeighbours(n, neighbourSize);
+        const hits = neighbours.reduce((s, nb) => s + (freq[nb] || 0), 0);
+        return { center: n, neighbours, hits };
+      }).sort((a, b) => b.hits - a.hits);
+      arcScores[0].neighbours.forEach(n => hotNums.add(n));
+      strategy = `wheel arc around ${arcScores[0].center} → best splits`;
+    }
+  }
+
+  // Score all split zones by how many of their numbers are hot and by hit frequency
+  const splitZones = betZones.filter(z => z.type === 'Split');
+  const scored = splitZones.map(z => {
+    const overlap = z.nums.filter(n => hotNums.has(n)).length;
+    const totalHits = z.nums.reduce((s, n) => s + (freq[n] || 0), 0);
+    return { zone: z, score: overlap * 1000 + totalHits };
+  }).sort((a, b) => b.score - a.score);
+
+  const usedNums = new Set();
+  const picked = [];
+  for (const s of scored) {
+    if (picked.length >= coinCount) break;
+    if (s.zone.nums.some(n => usedNums.has(n))) continue;
+    s.zone.nums.forEach(n => usedNums.add(n));
+    picked.push(s);
+  }
+  if (!picked.length) { showBestCoinsStatus('No split zones found.', true); return; }
+
+  clearAllBets();
+  const offset = defaultBestCoinsOffset;
+  picked.forEach(({ zone }) => {
+    if (offset === 0) {
+      placeChipOnZone(zone);
+    } else {
+      // shift both numbers in the split and find the matching zone
+      const shifted = zone.nums.map(n => ((n + offset) % 37 + 37) % 37).sort((a, b) => a - b);
+      const target = splitZones.find(z => z.nums[0] === shifted[0] && z.nums[1] === shifted[1]);
+      if (target) placeChipOnZone(target); else placeChipOnZone(zone);
+    }
+  });
+
+  const labels = picked.map(({ zone }) => zone.nums.join('/'));
+  const msg = `${strategy} → [${labels.join(', ')}]`;
+  showBestCoinsStatus(msg, false);
+  document.getElementById('bestCoinsStatus').dataset.baseText = msg;
+}
+
+
+// ─── BEST CORNERS ─────────────────────────────────────────────────────────────
+function placeBestCorners() {
+  const coinCount = Math.max(1, Math.min(36, parseInt(document.getElementById('bestCoinsCount').value, 10) || 5));
+  if (!spinHistory.length) { showBestCoinsStatus('Load roulette rounds first.', true); return; }
+
+  const freq = {};
+  for (const n of spinHistory) freq[n] = (freq[n] || 0) + 1;
+
+  let hotNums = new Set();
+  let strategy = '';
+
+  if (bestCoinsAlgo === 'stats') {
+    const picks = pickByStats(coinCount * 4);
+    picks.forEach(({ n }) => hotNums.add(n));
+    strategy = 'Stats algo → best corners';
+  } else {
+    const sectorScores = WHEEL_SECTORS.map(sector => {
+      const hits = spinHistory.filter(n => sector.nums.includes(n)).length;
+      const rate = hits / spinHistory.length;
+      const expected = sector.nums.length / 37;
+      return { ...sector, hits, rate, edge: rate - expected };
+    }).sort((a, b) => b.edge - a.edge);
+
+    const hotSector = sectorScores[0];
+    const neighbourSize = Math.max(1, Math.floor((coinCount * 4 - 1) / 2));
+
+    if (hotSector.edge > 0.02 && hotSector.hits >= 2) {
+      hotSector.nums.forEach(n => hotNums.add(n));
+      strategy = `${hotSector.name} sector → best corners`;
+    } else {
+      const arcScores = WHEEL_ORDER.filter(n => n !== 0).map(n => {
+        const neighbours = wheelNeighbours(n, neighbourSize);
+        const hits = neighbours.reduce((s, nb) => s + (freq[nb] || 0), 0);
+        return { center: n, neighbours, hits };
+      }).sort((a, b) => b.hits - a.hits);
+      arcScores[0].neighbours.forEach(n => hotNums.add(n));
+      strategy = `wheel arc around ${arcScores[0].center} → best corners`;
+    }
+  }
+
+  const cornerZones = betZones.filter(z => z.type === 'Corner');
+  const scored = cornerZones.map(z => {
+    const overlap = z.nums.filter(n => hotNums.has(n)).length;
+    const totalHits = z.nums.reduce((s, n) => s + (freq[n] || 0), 0);
+    return { zone: z, score: overlap * 1000 + totalHits };
+  }).sort((a, b) => b.score - a.score);
+
+  const usedNums = new Set();
+  const picked = [];
+  for (const s of scored) {
+    if (picked.length >= coinCount) break;
+    if (s.zone.nums.some(n => usedNums.has(n))) continue;
+    s.zone.nums.forEach(n => usedNums.add(n));
+    picked.push(s);
+  }
+  if (!picked.length) { showBestCoinsStatus('No corner zones found.', true); return; }
+
+  clearAllBets();
+  const offset = defaultBestCoinsOffset;
+  picked.forEach(({ zone }) => {
+    if (offset === 0) {
+      placeChipOnZone(zone);
+    } else {
+      const shifted = zone.nums.map(n => ((n + offset) % 37 + 37) % 37).sort((a, b) => a - b);
+      const target = cornerZones.find(z =>
+        z.nums.length === 4 &&
+        z.nums[0] === shifted[0] && z.nums[1] === shifted[1] &&
+        z.nums[2] === shifted[2] && z.nums[3] === shifted[3]
+      );
+      if (target) placeChipOnZone(target); else placeChipOnZone(zone);
+    }
+  });
+
+  const labels = picked.map(({ zone }) => zone.nums.join('/'));
+  const msg = `${strategy} → [${labels.join(', ')}]`;
+  showBestCoinsStatus(msg, false);
+  document.getElementById('bestCoinsStatus').dataset.baseText = msg;
+}
+
+
+function getAllBetCandidates() {
+  const insideCandidates = betZones
+    .filter(zone => zone.type === 'Straight' || zone.type === 'Split' || zone.type === 'Corner')
+    .map(zone => ({
+      kind: 'inside',
+      id: zone.id,
+      label: `${zone.type} ${zone.nums.join('-')}`,
+      nums: zone.nums,
+      payout: INSIDE_PAYOUTS[zone.type] || 0,
+      zone,
+    }));
+
+  const outsideCandidates = Array.from(document.querySelectorAll('.ob-cell')).map(el => {
+    const betId = el.dataset.bet;
+    let nums = [];
+    let payout = 0;
+
+    if (obBets.has(betId)) {
+      nums = obBets.get(betId).nums;
+    } else if (betId && betId.startsWith('street_')) {
+      const colIndex = Number(betId.split('_')[1]) - 1;
+      nums = colIndex >= 0 && colIndex < 12 ? [board[0][colIndex], board[1][colIndex], board[2][colIndex]] : [];
+    } else {
+      nums = getOutsideNumbersById(betId);
+    }
+
+    payout = betId && betId.startsWith('street_') ? 11 : (OUTSIDE_PAYOUTS[betId] || 0);
+
+    return {
+      kind: 'outside',
+      id: betId,
+      label: el.textContent.trim(),
+      nums,
+      payout,
+      element: el,
+    };
+  }).filter(candidate => candidate.id && candidate.nums.length);
+
+  return [...insideCandidates, ...outsideCandidates];
+}
+
+function getOutsideNumbersById(betId) {
+  const defs = {
+    dozen1: [1,2,3,4,5,6,7,8,9,10,11,12],
+    dozen2: [13,14,15,16,17,18,19,20,21,22,23,24],
+    dozen3: [25,26,27,28,29,30,31,32,33,34,35,36],
+    col1: [1,4,7,10,13,16,19,22,25,28,31,34],
+    col2: [2,5,8,11,14,17,20,23,26,29,32,35],
+    col3: [3,6,9,12,15,18,21,24,27,30,33,36],
+    low: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18],
+    even: [2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36],
+    red: [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36],
+    black: [2,4,6,8,10,11,13,15,17,20,22,24,26,28,29,31,33,35],
+    odd: [1,3,5,7,9,11,13,15,17,19,21,23,25,27,29,31,33,35],
+    high: [19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36],
+  };
+  return defs[betId] || [];
+}
+
+function getCandidateRoundPnL(candidate, result, chipValue) {
+  let pnl = -chipValue;
+  if (candidate.nums.includes(result)) {
+    pnl += chipValue * (candidate.payout + 1);
+  }
+  return pnl;
+}
+
+function placeChipOnCandidate(candidate) {
+  if (candidate.kind === 'inside') {
+    placeChipOnZone(candidate.zone);
+    return;
+  }
+
+  if (candidate.kind === 'outside' && candidate.element) {
+    placeBetOB(candidate.element, candidate.label, candidate.nums);
+  }
+}
+
+function parseRoundsInput() {
+  const input = document.getElementById('roundsInput');
+  const status = document.getElementById('roundsStatus');
+  const raw = input.value.trim();
+
+  if (!raw) {
+    spinHistory = [];
+    status.textContent = 'Waiting for pasted numbers.';
+    status.className = 'paste-status';
+    calculatePnL();
+    return;
+  }
+
+  const tokens = raw
+    .split(/[\s,.;:|/\\-]+/)
+    .map(token => token.trim())
+    .filter(Boolean);
+
+  const invalid = tokens.filter(token => !/^\d+$/.test(token) || Number(token) < 0 || Number(token) > 36);
+  if (invalid.length) {
+    status.textContent = `Invalid entry: ${invalid[0]}. Use whole numbers from 0 to 36.`;
+    status.className = 'paste-status error';
+    calculatePnL();
+    return;
+  }
+
+  const allNums = tokens.map(Number);
+  spinHistory = allNums.slice(-spinLimit);
+  const total = allNums.length;
+  const using = spinHistory.length;
+  status.textContent = total > using
+    ? `${total} loaded, using last ${using}. Last: ${spinHistory[spinHistory.length - 1]}.`
+    : `${using} round${using === 1 ? '' : 's'} loaded. Last: ${spinHistory[spinHistory.length - 1]}.`;
+  status.className = 'paste-status success';
+  input.scrollLeft = input.scrollWidth;
+  calculatePnL();
+  updateStatsPanel();
+  if (autoUpdateBestCoins) {
+    placeBestFiveCoins();
+  }
+}
+
+function clearRoundsInput() {
+  document.getElementById('roundsInput').value = '';
+  spinHistory = [];
+  const status = document.getElementById('roundsStatus');
+  status.textContent = 'Waiting for pasted numbers.';
+  status.className = 'paste-status';
+  calculatePnL();
+  updateStatsPanel();
+}
+
+function appendRoundNumber(value) {
+  const input = document.getElementById('roundsInput');
+  const next = input.value.trim();
+  input.value = next ? `${next}.${value}` : String(value);
+  input.scrollLeft = input.scrollWidth;
+  parseRoundsInput();
+}
+
+function setSpinLimit(delta) {
+  spinLimit = Math.max(1, spinLimit + delta);
+  document.getElementById('spinLimitDisplay').value = spinLimit;
+  parseRoundsInput();
+}
+
+function onSpinLimitInput(el) {
+  const val = parseInt(el.value, 10);
+  if (!isNaN(val) && val >= 1) {
+    spinLimit = val;
+    parseRoundsInput();
+  }
+}
+
+function setNumbersTab(tab) {
+  const isRounds = tab === 'rounds';
+  document.getElementById('roundsTabBtn').classList.toggle('active', isRounds);
+  document.getElementById('ocrTabBtn').classList.toggle('active', !isRounds);
+  document.getElementById('roundsView').classList.toggle('active', isRounds);
+  document.getElementById('ocrView').classList.toggle('active', !isRounds);
+}
+
+async function runOCR() {
+  const status = document.getElementById('ocrStatus');
+  if (!ocrImageDataUrl) {
+    status.textContent = 'Add an image first.';
+    status.className = 'ocr-status error';
+    return;
+  }
+
+  if (!window.Tesseract) {
+    status.textContent = 'OCR library did not load.';
+    status.className = 'ocr-status error';
+    return;
+  }
+
+  status.textContent = 'Reading image...';
+  status.className = 'ocr-status';
+
+  try {
+    const processed = await preprocessOCRImage(ocrImageDataUrl);
+    const rowCanvases = detectRowCanvases(processed);
+    const rowTexts = [];
+
+    for (let i = 0; i < rowCanvases.length; i++) {
+      status.textContent = `Reading rows... ${i + 1}/${rowCanvases.length}`;
+      const result = await window.Tesseract.recognize(rowCanvases[i], 'eng', {
+        tessedit_char_whitelist: '0123456789',
+      });
+      rowTexts.push(result.data.text || '');
+    }
+
+    const numbers = extractRouletteNumbers(rowTexts.join('\n')).reverse();
+    if (!numbers.length) {
+      status.textContent = 'No valid roulette numbers were found.';
+      status.className = 'ocr-status error';
+      return;
+    }
+
+    document.getElementById('roundsInput').value = numbers.join('.');
+    parseRoundsInput();
+    clearOCRImage();
+    status.textContent = `${numbers.length} roulette number${numbers.length === 1 ? '' : 's'} extracted into the rounds box.`;
+    status.className = 'ocr-status success';
+  } catch (error) {
+    status.textContent = 'OCR failed on this image.';
+    status.className = 'ocr-status error';
+  }
+}
+
+async function preprocessOCRImage(dataUrl) {
+  const img = await loadImage(dataUrl);
+  const scale = img.width < 1400 ? 2 : 1;
+  const canvas = document.createElement('canvas');
+  canvas.width = img.width * scale;
+  canvas.height = img.height * scale;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const data = imageData.data;
+
+  for (let i = 0; i < data.length; i += 4) {
+    const r = data[i];
+    const g = data[i + 1];
+    const b = data[i + 2];
+    const brightness = (0.299 * r) + (0.587 * g) + (0.114 * b);
+    const redBias = r - ((g + b) / 2);
+    const isBrightText = brightness > 140;
+    const isRedText = r > 125 && redBias > 20;
+
+    const value = (isBrightText || isRedText) ? 255 : 0;
+    data[i] = value;
+    data[i + 1] = value;
+    data[i + 2] = value;
+    data[i + 3] = 255;
+  }
+
+  ctx.putImageData(imageData, 0, 0);
+  return canvas;
+}
+
+function detectRowCanvases(sourceCanvas) {
+  const ctx = sourceCanvas.getContext('2d', { willReadFrequently: true });
+  const { width, height } = sourceCanvas;
+  const { data } = ctx.getImageData(0, 0, width, height);
+  const rowDensity = [];
+
+  for (let y = 0; y < height; y++) {
+    let lit = 0;
+    for (let x = 0; x < width; x++) {
+      if (data[(y * width + x) * 4] > 200) lit++;
+    }
+    rowDensity.push(lit / width);
+  }
+
+  const segments = [];
+  const threshold = 0.02;
+  let start = -1;
+
+  for (let y = 0; y < rowDensity.length; y++) {
+    if (rowDensity[y] >= threshold && start === -1) start = y;
+    if ((rowDensity[y] < threshold || y === rowDensity.length - 1) && start !== -1) {
+      const end = rowDensity[y] < threshold ? y - 1 : y;
+      if (end - start > Math.max(14, Math.floor(height * 0.03))) {
+        segments.push({ start, end });
+      }
+      start = -1;
+    }
+  }
+
+  const merged = [];
+  for (const segment of segments) {
+    const prev = merged[merged.length - 1];
+    if (prev && segment.start - prev.end < Math.max(10, Math.floor(height * 0.02))) {
+      prev.end = segment.end;
+    } else {
+      merged.push({ ...segment });
+    }
+  }
+
+  const finalSegments = merged.length ? merged : [{ start: 0, end: height - 1 }];
+  return finalSegments.map(segment => cropRowCanvas(sourceCanvas, segment.start, segment.end));
+}
+
+function cropRowCanvas(sourceCanvas, startY, endY) {
+  const paddingY = 8;
+  const y = Math.max(0, startY - paddingY);
+  const h = Math.min(sourceCanvas.height - y, (endY - startY) + (paddingY * 2) + 1);
+  const canvas = document.createElement('canvas');
+  canvas.width = sourceCanvas.width;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(sourceCanvas, 0, y, sourceCanvas.width, h, 0, 0, sourceCanvas.width, h);
+  return canvas;
+}
+
+function loadImage(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = src;
+  });
+}
+
+function extractRouletteNumbers(text) {
+  const matches = String(text).match(/\d+/g) || [];
+  return matches
+    .map(value => Number(value))
+    .filter(value => Number.isInteger(value) && value >= 0 && value <= 36);
+}
+
+function clearOCRImage() {
+  ocrImageDataUrl = '';
+  document.getElementById('ocrFileInput').value = '';
+  document.getElementById('ocrPreview').removeAttribute('src');
+  document.getElementById('ocrPreviewWrap').classList.remove('visible');
+  const status = document.getElementById('ocrStatus');
+  status.textContent = 'Waiting for an image.';
+  status.className = 'ocr-status';
+}
+
+function handleOCRFile(file) {
+  if (!file || !file.type.startsWith('image/')) return;
+  const reader = new FileReader();
+  reader.onload = event => {
+    ocrImageDataUrl = event.target.result;
+    document.getElementById('ocrPreview').src = ocrImageDataUrl;
+    document.getElementById('ocrPreviewWrap').classList.add('visible');
+    const status = document.getElementById('ocrStatus');
+    status.textContent = 'Image loaded. Starting OCR...';
+    status.className = 'ocr-status';
+    runOCR();
+  };
+  reader.readAsDataURL(file);
+}
+
+function calculatePnL() {
+  const pnlStatus = document.getElementById('pnlStatus');
+  const coinsPerRound = getCoinCountPerRound();
+  const totalStakePerRound = getStakePerRound();
+
+  if (!spinHistory.length) {
+    pnlStatus.textContent = 'Load at least one roulette round first.';
+    pnlStatus.className = 'paste-status error';
+    setPnlValues(coinsPerRound, totalStakePerRound, 0, 0, 0, 0);
+    return;
+  }
+
+  if (totalStakePerRound === 0) {
+    pnlStatus.textContent = 'Place at least one chip on the table to see live PnL.';
+    pnlStatus.className = 'paste-status error';
+    setPnlValues(coinsPerRound, 0, spinHistory.length, 0, 0, 0);
+    return;
+  }
+
+  const totalStaked = totalStakePerRound * spinHistory.length;
+  let netPnl = 0;
+
+  for (const result of spinHistory) {
+    netPnl += calculateRoundPnL(result);
+  }
+
+  const totalReturned = totalStaked + netPnl;
+  setPnlValues(coinsPerRound, totalStakePerRound, spinHistory.length, totalStaked, totalReturned, netPnl);
+  pnlStatus.textContent = `Calculated across ${spinHistory.length} round${spinHistory.length === 1 ? '' : 's'}.`;
+  pnlStatus.className = 'paste-status success';
+}
+
+function getStakePerRound() {
+  let total = 0;
+  for (const entry of placedBets.values()) entry.chips.forEach(chip => total += getChipCalcValue(chip));
+  for (const entry of obBets.values()) entry.chips.forEach(chip => total += getChipCalcValue(chip));
+  return total;
+}
+
+function getCoinCountPerRound() {
+  let total = 0;
+  for (const entry of placedBets.values()) total += entry.chips.length;
+  for (const entry of obBets.values()) total += entry.chips.length;
+  return total;
+}
+
+function getChipCalcValue(chip) {
+  return pnlCoinMode === 'placed' ? chip.value : Number(pnlCoinMode);
+}
+
+function calculateRoundPnL(result) {
+  let pnl = 0;
+
+  for (const entry of placedBets.values()) {
+    const payout = INSIDE_PAYOUTS[entry.zone.type] || 0;
+    for (const chip of entry.chips) {
+      const chipValue = getChipCalcValue(chip);
+      pnl -= chipValue;
+      if (entry.zone.nums.includes(result)) {
+        pnl += chipValue * (payout + 1);
+      }
+    }
+  }
+
+  for (const [betId, entry] of obBets.entries()) {
+    const payout = betId.startsWith('street_') ? 11 : (OUTSIDE_PAYOUTS[betId] || 0);
+    for (const chip of entry.chips) {
+      const chipValue = getChipCalcValue(chip);
+      pnl -= chipValue;
+      if (entry.nums.includes(result)) {
+        pnl += chipValue * (payout + 1);
+      }
+    }
+  }
+
+  return pnl;
+}
+
+function setPnlValues(coinsPerRound, stakePerRound, roundCount, totalStaked, totalReturned, netPnl) {
+  document.getElementById('coinsPerRoundValue').textContent = String(coinsPerRound);
+  document.getElementById('stakePerRoundValue').textContent = stakePerRound.toFixed(2);
+  document.getElementById('roundCountValue').textContent = String(roundCount);
+  document.getElementById('totalStakedValue').textContent = totalStaked.toFixed(2);
+  document.getElementById('totalReturnedValue').textContent = totalReturned.toFixed(2);
+
+  const pnlEl = document.getElementById('netPnlValue');
+  pnlEl.textContent = netPnl.toFixed(2);
+  pnlEl.classList.remove('positive', 'negative');
+  if (netPnl > 0) pnlEl.classList.add('positive');
+  if (netPnl < 0) pnlEl.classList.add('negative');
+}
+
+// ─── CHIP TRAY ────────────────────────────────────────────────────────────────
+function buildChipTray() {
+  const row = document.getElementById('chipsRow');
+  CHIP_DEFS.forEach(def => {
+    const btn = document.createElement('div');
+    btn.className = 'chip-btn' + (def.value === selectedChip.value ? ' active' : '');
+    btn.style.background = def.bg;
+    btn.style.color = def.text;
+    btn.style.borderColor = def.border;
+    btn.textContent = def.label;
+    btn.onclick = () => {
+      selectedChip = def;
+      document.querySelectorAll('.chip-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    };
+    row.appendChild(btn);
+  });
+}
+
+function buildRoundsKeypad() {
+  const keypad = document.getElementById('roundsKeypad');
+  const groups = [
+    [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15],
+    [16,17,18,19,20,21,22,23,24,25,26,27,28,29,30],
+    [31,32,33,34,35,36,0],
+  ];
+  groups.forEach(group => {
+    const row = document.createElement('div');
+    row.className = 'keypad-row';
+    group.forEach(n => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'round-btn';
+      btn.textContent = String(n);
+      btn.onclick = () => appendRoundNumber(n);
+      row.appendChild(btn);
+    });
+    keypad.appendChild(row);
+  });
+}
+
+function buildPnlCoinValueOptions() {
+  const row = document.getElementById('pnlCoinsRow');
+  CHIP_DEFS.forEach(def => {
+    const btn = document.createElement('div');
+    btn.className = 'pnl-coin-btn';
+    btn.dataset.value = String(def.value);
+    btn.style.background = def.bg;
+    btn.style.color = def.text;
+    btn.style.borderColor = def.border;
+    btn.textContent = def.label;
+    btn.onclick = () => setPnlMode(String(def.value));
+    row.appendChild(btn);
+  });
+}
+
+function setPnlMode(mode) {
+  pnlCoinMode = mode;
+  document.getElementById('pnlPlacedModeBtn').classList.toggle('active', mode === 'placed');
+  document.querySelectorAll('.pnl-coin-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.value === mode);
+  });
+  calculatePnL();
+}
+
+function initOCRControls() {
+  const input = document.getElementById('ocrFileInput');
+  const dropzone = document.getElementById('ocrDropzone');
+
+  dropzone.addEventListener('click', () => input.click());
+
+  input.addEventListener('change', event => {
+    const [file] = event.target.files || [];
+    handleOCRFile(file);
+  });
+
+  ['dragenter', 'dragover'].forEach(type => {
+    dropzone.addEventListener(type, event => {
+      event.preventDefault();
+      dropzone.classList.add('active');
+    });
+  });
+
+  ['dragleave', 'drop'].forEach(type => {
+    dropzone.addEventListener(type, event => {
+      event.preventDefault();
+      if (type === 'drop') {
+        const [file] = Array.from(event.dataTransfer?.files || []);
+        handleOCRFile(file);
+      }
+      dropzone.classList.remove('active');
+    });
+  });
+}
+
+function initOutsideBetControls() {
+  document.querySelectorAll('.ob-cell').forEach(cell => {
+    cell.addEventListener('contextmenu', e => {
+      e.preventDefault();
+      removeLastChipFromOB(cell);
+    });
+  });
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+buildGrid();
+buildChipTray();
+buildRoundsKeypad();
+buildPnlCoinValueOptions();
+initOCRControls();
+setNumbersTab('rounds');
+renderPatternControls();
+document.getElementById('roundsInput').addEventListener('input', parseRoundsInput);
+requestAnimationFrame(() => {
+  buildBetZones();
+  initOverlay();
+  initOutsideBetControls();
+});
+
+window.addEventListener('resize', () => {
+  requestAnimationFrame(() => { buildBetZones(); renderChipLayer(); });
+});
+
+function updateStatsPanel() {
+  const total = spinHistory.length;
+  const nonZero = spinHistory.filter(n => n !== 0);
+  const nz = nonZero.length;
+
+  document.getElementById('statsSpins').textContent =
+    total ? `${total} round${total === 1 ? '' : 's'} loaded` : 'No rounds loaded';
+
+  function pct(count, base) {
+    return base ? Math.round(count / base * 100) : 0;
+  }
+
+  function setRow(id, count, base, colorClass) {
+    const p = pct(count, base);
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.querySelector('.stat-row-fill').style.width = p + '%';
+    el.querySelector('.stat-row-fill').className = 'stat-row-fill ' + (colorClass || '');
+    el.querySelector('.stat-row-pct').textContent = p + '%';
+  }
+
+  const REDS_SET = new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
+  const redCount   = nonZero.filter(n => REDS_SET.has(n)).length;
+  const blackCount = nonZero.filter(n => !REDS_SET.has(n)).length;
+  const evenCount  = nonZero.filter(n => n % 2 === 0).length;
+  const oddCount   = nonZero.filter(n => n % 2 !== 0).length;
+  const lowCount   = spinHistory.filter(n => n >= 0 && n <= 18).length;
+  const highCount  = nonZero.filter(n => n >= 19 && n <= 36).length;
+  const d1Count    = nonZero.filter(n => n >= 1  && n <= 12).length;
+  const d2Count    = nonZero.filter(n => n >= 13 && n <= 24).length;
+  const d3Count    = nonZero.filter(n => n >= 25 && n <= 36).length;
+  const c1Count    = spinHistory.filter(n => [1,4,7,10,13,16,19,22,25,28,31,34].includes(n)).length;
+  const c2Count    = spinHistory.filter(n => [2,5,8,11,14,17,20,23,26,29,32,35].includes(n)).length;
+  const c3Count    = spinHistory.filter(n => [3,6,9,12,15,18,21,24,27,30,33,36].includes(n)).length;
+  const zeroCount  = spinHistory.filter(n => n === 0).length;
+
+  setRow('statRed',   redCount,   nz, 'red');
+  setRow('statBlack', blackCount, nz, 'black');
+  setRow('statEven',  evenCount,  nz, '');
+  setRow('statOdd',   oddCount,   nz, 'purple');
+  setRow('statLow',   lowCount,   total, 'blue');
+  setRow('statHigh',  highCount,  nz, '');
+  setRow('statD1',    d1Count,    total, '');
+  setRow('statD2',    d2Count,    total, 'blue');
+  setRow('statD3',    d3Count,    total, 'purple');
+  setRow('statC1',    c1Count,    total, '');
+  setRow('statC2',    c2Count,    total, 'blue');
+  setRow('statC3',    c3Count,    total, 'purple');
+  setRow('statZero',  zeroCount,  total, 'green');
+}
+</script>
+
+
+</body>
+</html>
