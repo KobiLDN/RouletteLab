@@ -23,7 +23,7 @@ The user loads a history of roulette spin results, places chips on a visual roul
 - Header: "ROULETTE LAB" title + version tag
 - Roulette Table: CSS Grid (13 cols) — green 0 spanning full height, 3×12 red/black number grid
 - Outside Bets: Two rows below the grid (Dozens, Columns, Red/Black, Even/Odd, High/Low)
-- Chip Tray: 7 denominations ($0.10–$20) with distinct colours + total display + action buttons
+- Chip Tray: 7 denominations ($0.10–$20) with distinct colours + total display + action buttons (Random Coins, Best Coins, Best Split, Best Corners, Auto Update Coins, Clear All)
 - Rounds Input Panel: tabbed (Manual entry / OCR image upload)
 - Rounds Keypad: 37 buttons (0–36) for quick manual entry
 - PnL Panel: 6-card grid (Coins/Round, Stake, Rounds, Total Staked, Total Returned, Net P/L)
@@ -46,7 +46,7 @@ Three bet-type outputs: Best Coins (straight-up), Best Splits, Best Corners
 
 **Sector Mode:**
 - Analyzes 3 classic wheel sectors: Voisins du Zéro (17 numbers), Tiers du Cylindre (12), Orphelins (8)
-- If hottest sector edge >0.02% and ≥2 hits → place coins on top scorers in that sector
+- If hottest sector edge >2% (rate − expected, as a fraction >0.02) and ≥2 hits → place coins on top scorers in that sector
 - Fallback: N-neighbor arc mode — finds arc around wheel with highest hit density
 
 **Stats Mode:**

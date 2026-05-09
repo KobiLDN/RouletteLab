@@ -21,7 +21,7 @@ A single-file roulette strategy analysis and backtesting tool. Load your spin hi
 - Configurable spin window (last N rounds)
 
 ### Best Bet Engine
-Three output types — **Best Coins** (straight-up), **Best Splits**, **Best Corners** — with two algorithm modes:
+Three output types — **Best Coins** (straight-up), **Best Splits**, **Best Corners** — with two algorithm modes. A **Random Coins** button is also available, which clears the table and scatters the configured coin count across random straight-up numbers (useful as a baseline for the P&L backtester).
 
 | Mode | Logic |
 |------|-------|
